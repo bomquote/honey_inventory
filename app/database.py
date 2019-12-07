@@ -92,14 +92,16 @@ def reference_col(tablename, pk_name='id', fk_kwargs=None,
         **col_kwargs)
 
 
-class Product(Base, CRUDMixin):
+class Product(Base, CRUDMixin, SurrogatePK):
     """The base model for the Honeygear Product"""
     __tablename__ = 'products'
-    id = Column(Integer, primary_key=True)
     title = Column('title', Unicode())
     in_stock = Column('in_stock', Boolean, default=True)
     quantity = Column('quantity', Integer)
+    cost = Column('cost', Numeric)
     price = Column('price', Numeric)
+    description = Column('description', UnicodeText())
+    upc = Column('upc', Unicode(), unique=True)
 
     def __repr__(self):
-        return '<User %r>' % self.title
+        return f'<Product {self.title}>'
