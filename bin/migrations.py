@@ -14,19 +14,77 @@ def db():
 
 @db.command()
 @click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
-def migratedb(identifier):
-    """Migrate the db."""
+def upgrade(identifier):
+    """Migrate the db up to the new version. This supports partial revision identifiers
+    and relative migration identifiers.
+    see:
+    https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers
+    https://alembic.sqlalchemy.org/en/latest/tutorial.html#relative-migration-identifiers
+    """
     os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
     alembic_config.main(argv=['upgrade', f'{identifier}'])
 
 @db.command()
+@click.option("--identifier", prompt="Revision identifier", default='', help="The revision identifier to target.")
+def downgrade(identifier):
+    """Migrate the db to a previous version or all the way back to base, using 'base' as
+    the revision identifier. This supports partial revision identifiers and relative
+    migration identifiers.
+    see:
+    https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers
+    https://alembic.sqlalchemy.org/en/latest/tutorial.html#relative-migration-identifiers
+    """
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    alembic_config.main(argv=['downgrade', f'{identifier}'])
+
+
+@db.command()
 @click.option("--message", prompt="Revision message", help="New revision.")
-def revision(message):
+@click.option("--autogenerate", prompt="Autogenerate the migration?", default="True",
+              help="Create a rudimentary migration automatically.")
+def revision(message, autogenerate):
     """Create a revision. If you use this then you will need to manually
     edit the upgrade/downgrade methods in the py file created in
     alembic/versions/<file>.py"""
     os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
-    alembic_config.main(argv=['revision', f'-m "{message}"'])
+    if autogenerate == 'True':
+        alembic_config.main(argv=['revision', '--autogenerate', f'-m "{message}"'])
+    else:
+        alembic_config.main(argv=['revision', f'-m "{message}"'])
+
+
+@db.command()
+@click.option("--verbose", prompt="Use Verbose?", default="True", help="Return a verbose info response?")
+def current(verbose):
+    """Get information about the state of the current revision."""
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    if not verbose == "True":
+        alembic_config.main(argv=['current'])
+    else:
+        alembic_config.main(argv=['current', '--verbose'])
+
+
+@db.command()
+@click.option("--verbose", prompt="Use Verbose?", default="True", help="Return a verbose info response?")
+@click.option("--history_range", prompt="Input a history range?", default="False",
+              help="accepts an argument [start]:[end]")
+def history(verbose, history_range):
+    """Get information about the state of the current revision and it's history.
+    Supports viewing history ranges, see:
+    https://alembic.sqlalchemy.org/en/latest/tutorial.html#viewing-history-ranges
+    """
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    if not verbose == "True":
+        if history_range == "False":
+            alembic_config.main(argv=['history'])
+        else:
+            alembic_config.main(argv=['history', f'-r{history_range}'])
+    else:
+        if not history_range == "False":
+            alembic_config.main(argv=['history', '--verbose', f'-r{history_range}'])
+        else:
+            alembic_config.main(argv=['history', '--verbose'])
+
 
 @db.command()
 def dropdb():

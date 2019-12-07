@@ -1,8 +1,7 @@
 from sqlalchemy import (create_engine, Integer, Column, ForeignKey, Boolean,
-                        Numeric, Unicode, UnicodeText)
-from sqlalchemy.ext.declarative import declarative_base
+                        Numeric, Unicode, UnicodeText, Table)
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, relationship, backref
-from sqlalchemy.ext.declarative import declared_attr
 from app.extensions import metadata
 
 # create an engine
@@ -14,7 +13,8 @@ session = Session()
 # create the Base to inherit in the Model
 Base = declarative_base(metadata=metadata)
 
-class CRUDMixin(object):
+
+class CRUDMixin:
     """Mixin that adds convenience methods for CRUD (create, read, update,
     delete) operations."""
 
@@ -92,16 +92,56 @@ def reference_col(tablename, pk_name='id', fk_kwargs=None,
         **col_kwargs)
 
 
-class Product(Base, CRUDMixin, SurrogatePK):
+class ProductSKU(Base, CRUDMixin, SurrogatePK):
     """The base model for the Honeygear Product"""
-    __tablename__ = 'products'
+    __tablename__ = 'product_skus'
     title = Column('title', Unicode())
-    in_stock = Column('in_stock', Boolean, default=True)
-    quantity = Column('quantity', Integer)
-    cost = Column('cost', Numeric)
-    price = Column('price', Numeric)
+    sku = Column('sku', Unicode(), nullable=False, unique=True)
+    color = Column('color', Unicode(), nullable=False)
     description = Column('description', UnicodeText())
     upc = Column('upc', Unicode(), unique=True)
+    # sku_family: grapple, ff, gf, tract, charge, accessory
+    # sku_class: pro, grip, base, component
+    # uom: pc, box, inner-ctn
+    # uom_qty: 1, 6, 8, 24, 32, 48, 64
+
+    # STATE
+    # in_stock = Column('in_stock', Boolean, default=True)
+    # quantity = Column('quantity', Integer)
+    # cost = Column('cost', Numeric)
+    # price = Column('price', Numeric)
+    # location = Column('location', Unicode(), unique=True)
+
+    def __init__(self, title, sku, color, description, upc):
+        self.title = title
+        self.sku = sku
+        self.color = color
+        self.description = description
+        self.upc = upc
 
     def __repr__(self):
         return f'<Product {self.title}>'
+
+
+class ProductFamily(Base, CRUDMixin, SurrogatePK):
+    """Family groups for the products."""
+    __tablename__ = 'product_families'
+    name = Column('name', Unicode())
+
+    def __repr__(self):
+        return f'<ProductFamily {self.name}>'
+
+class ProductUnit(Base, CRUDMixin, SurrogatePK):
+    """Unit of measure for the products. Either pc, box, ctn"""
+
+
+# one location can have many different products.
+# one product can have stock in many locations.
+# Like:
+# Location, SKU, QTY
+# Box 1, A1-B-L, 10
+product_location_association = Table(
+    'products_locations', Base.metadata,
+    Column('product_id', Integer, ForeignKey('products.id')),
+    Column('location_id', Integer, ForeignKey('locations.id'))
+)
