@@ -92,7 +92,40 @@ def reference_col(tablename, pk_name='id', fk_kwargs=None,
         **col_kwargs)
 
 
-class ProductSKU(Base, CRUDMixin, SurrogatePK):
+#############################################
+######### the actual models #################
+#############################################
+
+class SkuOwner(Base, CRUDMixin, SurrogatePK):
+    """A table designating ultimate owners of product SKUs. Equivalent to
+    customer or account name. Parent -> SkuOwner, Child -> ProductSku. """
+    __tablename__ = 'sku_owners'
+    name = Column('name', Unicode(), nullable=False, unique=True)
+    # backref: skus
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'<SkuOwner {self.name}>'
+
+
+class ContainerType(Base, CRUDMixin, SurrogatePK):
+    """
+    A table to hold the various ProductSkU containers and their quantity.
+    """
+    __tablename__ = 'uoms'
+    name = Column('name', Unicode(), nullable=False)
+    capacity = Column('capacity', Integer)
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'<UOM {self.name}>'
+
+
+class ProductSku(Base, CRUDMixin, SurrogatePK):
     """The base model for the Honeygear Product"""
     __tablename__ = 'product_skus'
     title = Column('title', Unicode())
@@ -100,9 +133,12 @@ class ProductSKU(Base, CRUDMixin, SurrogatePK):
     color = Column('color', Unicode(), nullable=False)
     description = Column('description', UnicodeText())
     upc = Column('upc', Unicode(), unique=True)
+    owner_id = reference_col('sku_owners')
+    owner = relationship('Category', backref='skus')
+
     # sku_family: grapple, ff, gf, tract, charge, accessory
     # sku_class: pro, grip, base, component
-    # uom: pc, box, inner-ctn
+    # uom: pc, box, inner-ctn, outer-ctn
     # uom_qty: 1, 6, 8, 24, 32, 48, 64
 
     # STATE
