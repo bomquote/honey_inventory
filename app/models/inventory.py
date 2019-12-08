@@ -5,6 +5,20 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from app.database import Base, CRUDMixin, SurrogatePK, reference_col
 
 
+class Warehouse(Base, CRUDMixin, SurrogatePK):
+    """
+    A Warehouse is an InventoryLocation container.
+    """
+    __tablename__ = 'warehouses'
+    name = Column('name', Unicode())
+
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'<Warehouse {self.name}>'
+
+
 class InventoryLocation(Base, CRUDMixin, SurrogatePK):
     """
     A location for a Sku. Right now I think of this as a unique name/number for
@@ -13,21 +27,31 @@ class InventoryLocation(Base, CRUDMixin, SurrogatePK):
     each box and call that label the "location". Then, I can populate a location
     with SKUs and relate them in the many-many table. I'm sure this could be made
     more complex in the future but it may be all we ever need.
+
+    NOTE for changes: this model is imported in alembic/env.py for migrations.
     """
     # name the box like SkuOwner-Number
     __tablename__ = 'inventory_locations'
-    __table_args__ = (UniqueConstraint('label', 'warehouse'),)
+    __table_args__ = (UniqueConstraint('label', 'warehouse_id'),)
     label = Column('label', Unicode(), nullable=False)
-    warehouse = Column('warehouse', Unicode(), nullable=False, default='Calabria')
+    warehouse_id = Column('warehouse_id', Integer,
+                    ForeignKey("warehouses.id",
+                               onupdate="CASCADE",
+                               ondelete="CASCADE"),
+                    primary_key=True)
+
+    warehouse = relationship("Warehouse", backref="inventory_locations",
+                                cascade="all, delete",
+                                single_parent=True)
 
     # backref: skus -> SkuLocationAssoc
 
-    def __init__(self, label, warehouse):
+    def __init__(self, label, warehouse_id):
         self.label = label
-        self.warehouse = warehouse
+        self.warehouse_id = warehouse_id
 
     def __repr__(self):
-        return f'<InventoryLocation {self.label, self.warehouse}>'
+        return f'<InventoryLocation {self.label, self.warehouse_id}>'
 
 
 class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK):
@@ -64,7 +88,6 @@ class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK):
     sku = relationship("ProductSku", backref="locations",
                           foreign_keys=[location_id],
                           cascade="all, delete",
-                          primary_join="product_skus.c.id == SkuLocationAssoc.sku_id",
                           single_parent=True)
 
     def __init__(self, sku_id, location_id, quantity):

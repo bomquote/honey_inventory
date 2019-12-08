@@ -18,8 +18,10 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+from app.database import Base
 from app.models.skus import ProductSku
-target_metadata = ProductSku.metadata
+from app.models.inventory import InventoryLocation
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
