@@ -64,6 +64,7 @@ class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK):
     sku = relationship("ProductSku", backref="locations",
                           foreign_keys=[location_id],
                           cascade="all, delete",
+                          primary_join="product_skus.c.id == SkuLocationAssoc.sku_id",
                           single_parent=True)
 
     def __init__(self, sku_id, location_id, quantity):

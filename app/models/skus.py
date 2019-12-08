@@ -10,7 +10,7 @@ from app.database import Base, CRUDMixin, SurrogatePK, reference_col
 productsku_skuattr_assoc = Table(
     'productskus_skuattrs', Base.metadata,
     Column('sku_id', Integer, ForeignKey('product_skus.id')),
-    Column('skugroup_id', Integer, ForeignKey('sku_attrs.id'))
+    Column('skuattr_id', Integer, ForeignKey('sku_attrs.id'))
 )
 
 
@@ -43,7 +43,7 @@ class Container(Base, CRUDMixin, SurrogatePK):
     description = Column('description', UnicodeText, nullable=False)
     # self-referential id
     parent_id = reference_col('containers')
-    parent = relationship('Container', remote_side=[id], backref='children')
+    parent = relationship('Container', remote_side='Container.id', backref='children')
 
     def __init__(self, name, description, parent_id):
         self.name = name
@@ -76,7 +76,9 @@ class ProductSku(Base, CRUDMixin, SurrogatePK):
     sku_attrs = relationship(
         "SkuAttribute",
         secondary=productsku_skuattr_assoc,
-        back_populates="product_skus")
+        lazy='selectin', backref=backref('skus'),
+        cascade="all, delete", passive_deletes=True
+    )
 
     # backref: locations -> SkuLocationAssoc
 
@@ -103,8 +105,6 @@ class SkuAttribute(Base, CRUDMixin, SurrogatePK):
     """
     __tablename__ = 'sku_attrs'
     # key should be like "family", "class", "color", 'connector'
-    # keys should be unique for each owner_id NO DUMMY THEY SHOULD NOT:
-    # color:white color:black, ...
     key = Column('key', Unicode())
     # value should be the value for the key, like 'family':'Grapple', 'class':'Pro',
     # 'color':'white', 'connector':'Micro-USB'
@@ -112,8 +112,7 @@ class SkuAttribute(Base, CRUDMixin, SurrogatePK):
     owner_id = reference_col('sku_owners')
     owner = relationship('SkuOwner', backref='sku_attrs')
 
-    skus = relationship('ProductSku', secondary=productsku_skuattr_assoc,
-                        back_populates="sku_attrs")
+    # backref: skus
 
     def __init__(self, key, value, owner_id):
         self.key = key
@@ -121,5 +120,5 @@ class SkuAttribute(Base, CRUDMixin, SurrogatePK):
         self.owner_id = owner_id
 
     def __repr__(self):
-        return f'<SkuAttribute {self.key, self.value, self.owner}>'
+        return f'<SkuAttribute {self.key}={self.value}>'
 
