@@ -45,7 +45,11 @@ def downgrade(identifier):
 def revision(message, autogenerate):
     """Create a revision. If you use this then you will need to manually
     edit the upgrade/downgrade methods in the py file created in
-    alembic/versions/<file>.py"""
+    alembic/versions/<file>.py
+
+    Lot's more functionality not implemented here. See:
+    https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.revision
+    """
     os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
     if autogenerate == 'True':
         alembic_config.main(argv=['revision', '--autogenerate', f'-m "{message}"'])
@@ -62,6 +66,43 @@ def current(verbose):
         alembic_config.main(argv=['current'])
     else:
         alembic_config.main(argv=['current', '--verbose'])
+
+
+@db.command()
+@click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
+def show(identifier):
+    """Show the revision(s) denoted by the given symbol. This supports partial revision
+    identifiers and relative migration identifiers.
+    see:
+    https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.show
+    """
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    alembic_config.main(argv=['show', f'{identifier}'])
+
+
+@db.command()
+@click.option("--verbose", prompt="Use Verbose?", default="False", help="Return a verbose info response?")
+def heads(verbose):
+    """Show current available heads in the script directory.
+    see:
+    https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.heads
+    """
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    if verbose == "False":
+        alembic_config.main(argv=['heads'])
+    else:
+        alembic_config.main(argv=['heads', '--verbose'])
+
+
+@db.command()
+@click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
+def stamp(identifier):
+    """ ‘stamp’ the revision table with the given revision; don’t run any migrations.
+    see:
+    https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.stamp
+    """
+    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    alembic_config.main(argv=['stamp', f'{identifier}'])
 
 
 @db.command()
