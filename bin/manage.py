@@ -290,13 +290,45 @@ def transfer_sku(original_warehouse, original_label):
 @click.option("--warehouse",
               prompt="Enter the warehouse name",
               default="Garage", help="Select warehouse.")
-@click.option("--original_label", prompt="Enter the inventory location label",
+@click.option("--label", prompt="Enter the inventory location label",
               default="Required", help="Provide the location label.")
 def adjust_sku_qty(warehouse, label):
     """
     Adjust a single sku quantity as found in a specific location.
     """
-
+    if label == 'Required':
+        return print("You must provide a location label.")
+    wh = session.query(Warehouse).filter_by(name=warehouse).first()
+    if not wh:
+        return print(
+            f"The {warehouse} warehouse doesn't exist. Please create it first.")
+    original_location = session.query(InventoryLocation).filter(
+        InventoryLocation.label == label,
+        InventoryLocation.warehouse_id == wh.id).first()
+    if original_location and original_location.skus:
+        original_loc_sku_id_list = [inst.sku.id for inst in original_location.skus]
+        print(f"The following skus exist in the location: "
+                     f"{[(inst.sku.sku, str(inst.quantity)+' pcs') for inst in original_location.skus]}")
+        target_sku = input(f"Enter the SKU targeted for quantity change [{[inst.sku.sku for inst in original_location.skus][0]}]: ") or f'{[inst.sku.sku for inst in original_location.skus][0]}'
+        target_sku_obj = session.query(ProductSku).filter_by(sku=target_sku).first()
+        if not target_sku_obj:
+            return print('Invalid target SKU. Transaction cancelled.')
+        if target_sku_obj.id not in original_loc_sku_id_list:
+            return print('Target SKU not in location. Transaction cancelled.')
+        # transfer the target SKU from original location to the new location
+        update_quantity = input(
+            "Enter the updated total quantity for the SKU [Required]: ") or 'Required'
+        if not int(update_quantity):
+            return print('Invalid quantity. Transaction Cancelled.')
+        for inst in original_location.skus:
+            if inst.sku.id == target_sku_obj.id:
+                inst.update(quantity=int(update_quantity))
+        return print(f'Updated {target_sku_obj.sku} to quantity {int(update_quantity)}')
+    # InventoryLocation.create(label=label, warehouse_id=wh.id)
+    if original_location:
+        return print(f"Location {original_location} has no SKU's with inventory.")
+    return print(
+        f"Location <InventoryLocation ('{label}', '{warehouse}')> does not exist.")
 
 
 @inv.command()
