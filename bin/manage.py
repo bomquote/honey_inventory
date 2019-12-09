@@ -200,6 +200,105 @@ def transfer_location(original_warehouse, original_label):
         return print(f"Location {original_location} has no inventory to transfer.")
     return print(f"Location <InventoryLocation ('{original_label}', '{original_warehouse}')> does not exist.")
 
+
+@inv.command()
+@click.option("--original_warehouse",
+              prompt="Enter the original warehouse name",
+              default="Garage", help="Select warehouse.")
+@click.option("--original_label", prompt="Enter the original inventory location label",
+              default="Required", help="Provide the location label.")
+def transfer_sku(original_warehouse, original_label):
+    if original_label == 'Required':
+        return print("You must provide a location label.")
+    wh = session.query(Warehouse).filter_by(name=original_warehouse).first()
+    if not wh:
+        return print(
+            f"The {original_warehouse} warehouse doesn't exist. Please create it first.")
+    original_location = session.query(InventoryLocation).filter(
+        InventoryLocation.label == original_label,
+        InventoryLocation.warehouse_id == wh.id).first()
+    if original_location and original_location.skus:
+        original_loc_sku_id_list = [inst.sku.id for inst in original_location.skus]
+        print(f"The following skus exist in the location: "
+                     f"{[(inst.sku.sku, str(inst.quantity)+' pcs') for inst in original_location.skus]}")
+        answer = input("Shall we transfer a SKU of inventory at the location [Yes]? ") or "Yes"
+        if answer.lower() == 'yes':
+            target_sku = input("Enter the SKU to transfer [Required]: ") or 'Required'
+            target_sku_obj = session.query(ProductSku).filter_by(sku=target_sku).first()
+            if not target_sku_obj:
+                return print('Invalid target SKU. Transfer cancelled.')
+            if target_sku_obj.id not in original_loc_sku_id_list:
+                return print('Target SKU not in location. Transfer cancelled.')
+            transfer_warehouse = input(
+                'Enter the warehouse name for the transfer [Garage]: ') or 'Garage'
+            transfer_warehouse_obj = session.query(Warehouse).filter_by(
+                name=transfer_warehouse).first()
+            if not transfer_warehouse_obj:
+                return print(
+                    f"The {transfer_warehouse} warehouse doesn't exist. "
+                    f"Please create it first using `create_warehouse`.")
+
+            def transf():
+                """Use this to give two attempts to enter the label."""
+                return input('Enter the transfer label [Required]: ') or None
+
+            transfer_label = transf()
+            if not transfer_label:
+                # user error, assign and run it again
+                transfer_label = transf()
+            if transfer_label:
+                # search to see if the warehouse/label location exists.
+                transfer_location = session.query(InventoryLocation).filter(
+                    InventoryLocation.label == transfer_label,
+                    InventoryLocation.warehouse_id == transfer_warehouse_obj.id).first()
+                if transfer_location:
+                    # transfer the target SKU from original location to the new location
+                    for inst in original_location.skus:
+                        if inst.sku.id == target_sku_obj.id:
+                            inst.update(location_id=transfer_location.id)
+                    return print(f'Transferred {target_sku_obj.sku} to {transfer_location}')
+                else:
+                    create_new_label = input(
+                        f"The label {transfer_label} doesn't exist at the {transfer_warehouse_obj.name} warehouse. Create it now and transfer? [Yes]: ") or 'Yes'
+                    if create_new_label == "Yes":
+                        InventoryLocation.create(
+                            label=transfer_label,
+                            warehouse_id=transfer_warehouse_obj.id)
+                        print(
+                            f"Created the new inventory location with label {transfer_label}")
+                        transfer_location = session.query(InventoryLocation).filter(
+                            InventoryLocation.label == transfer_label,
+                            InventoryLocation.warehouse_id == transfer_warehouse_obj.id).first()
+                        # transfer the target SKU from original location to the new location
+                        for inst in original_location.skus:
+                            if inst.sku.id == target_sku_obj.id:
+                                inst.update(location_id=transfer_location.id)
+                        return print(
+                            f'Transferred {target_sku_obj.sku} to {transfer_location}')
+            return print('Transfer cancelled due to bad transfer label.')
+        else:
+            return print("This method only transfers individual SKU's from one location "
+                         "to another. Use `transfer-location` to transfer all sku's at once.")
+    # InventoryLocation.create(label=label, warehouse_id=wh.id)
+    if original_location:
+        return print(f"Location {original_location} has no inventory to transfer.")
+    return print(
+        f"Location <InventoryLocation ('{original_label}', '{original_warehouse}')> does not exist.")
+
+
+@inv.command()
+@click.option("--warehouse",
+              prompt="Enter the warehouse name",
+              default="Garage", help="Select warehouse.")
+@click.option("--original_label", prompt="Enter the inventory location label",
+              default="Required", help="Provide the location label.")
+def adjust_sku_qty(warehouse, label):
+    """
+    Adjust a single sku quantity as found in a specific location.
+    """
+
+
+
 @inv.command()
 @click.option("--count", default=1, help="Number of repeats.")
 @click.option("--name", prompt="Your Name", help="Name of the person scanning.")
