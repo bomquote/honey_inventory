@@ -2,10 +2,10 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from app.database import Base, CRUDMixin, SurrogatePK, reference_col
+from app.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
 
 
-class Warehouse(Base, CRUDMixin, SurrogatePK):
+class Warehouse(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A Warehouse is an InventoryLocation container.
     """
@@ -19,7 +19,7 @@ class Warehouse(Base, CRUDMixin, SurrogatePK):
         return f'<Warehouse {self.name}>'
 
 
-class InventoryLocation(Base, CRUDMixin, SurrogatePK):
+class InventoryLocation(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A location for a Sku. Right now I think of this as a unique name/number for
     a Container which may hold multiple different SKUs. For example, we have mixed
@@ -44,17 +44,20 @@ class InventoryLocation(Base, CRUDMixin, SurrogatePK):
                                 cascade="all, delete",
                                 single_parent=True)
 
-    # backref: skus -> SkuLocationAssoc
+    skus = relationship(
+        "SkuLocationAssoc", back_populates="location",
+        primaryjoin="sku_locations.c.location_id == InventoryLocation.id",
+        lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True)
 
     def __init__(self, label, warehouse_id):
         self.label = label
         self.warehouse_id = warehouse_id
 
     def __repr__(self):
-        return f'<InventoryLocation {self.label, self.warehouse_id}>'
+        return f'<InventoryLocation {self.label, self.warehouse.name}>'
 
 
-class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK):
+class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     An association object for Skus and Locations. The left side of the relationship
     maps a Sku as a one-to-many to InventoryLocations. This allows one SKU to have many
@@ -80,15 +83,15 @@ class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK):
     quantity = Column('quantity', Integer, nullable=False)
 
     # child
-    location = relationship("InventoryLocation", backref="skus",
-                                cascade="all, delete",
-                                single_parent=True)
+    location = relationship("InventoryLocation", back_populates="skus",
+                            foreign_keys=[location_id],
+                            lazy="joined", cascade="all, delete")
 
     # parent
-    sku = relationship("ProductSku", backref="locations",
-                          foreign_keys=[location_id],
-                          cascade="all, delete",
-                          single_parent=True)
+    sku = relationship("ProductSku", back_populates='locations',
+                          lazy="joined",
+                          foreign_keys=[sku_id],
+                          cascade="all, delete")
 
     def __init__(self, sku_id, location_id, quantity):
         self.sku_id = sku_id

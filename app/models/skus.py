@@ -2,8 +2,8 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from app.database import Base, CRUDMixin, SurrogatePK, reference_col
-
+from app.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from app.models.inventory import SkuLocationAssoc
 
 # one ProductSku can have many different SkuAttributes.
 # one SkuAttribute can have stock in many ProductSku's.
@@ -14,7 +14,7 @@ productsku_skuattr_assoc = Table(
 )
 
 
-class SkuOwner(Base, CRUDMixin, SurrogatePK):
+class SkuOwner(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """A table designating ultimate owners of product SKUs. Equivalent to
     customer or account name. Parent -> SkuOwner, Child -> ProductSku. """
     __tablename__ = 'sku_owners'
@@ -29,7 +29,7 @@ class SkuOwner(Base, CRUDMixin, SurrogatePK):
         return f'<SkuOwner {self.name}>'
 
 
-class Container(Base, CRUDMixin, SurrogatePK):
+class Container(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A table to hold the various ProductSku containers. It has a self-referential
     relationship so that a container which contains another container can be
@@ -53,7 +53,7 @@ class Container(Base, CRUDMixin, SurrogatePK):
     def __repr__(self):
         return f'<Container {self.name}>'
 
-class ProductSku(Base, CRUDMixin, SurrogatePK):
+class ProductSku(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     The base model for Product Skus.
 
@@ -78,7 +78,15 @@ class ProductSku(Base, CRUDMixin, SurrogatePK):
         cascade="all, delete", passive_deletes=True
     )
 
-    # backref: locations -> SkuLocationAssoc
+    # proxies to the InventoryLocation -> [<InventoryLocation ('hg-1', 'Office')>, ]
+    location = association_proxy('locations', 'location')
+
+    # this proxies to the SkuLocationAssoc -> [1, ]
+    quantity = association_proxy('locations', 'quantity')
+
+    # proxies to the SkuLocationAssoc -> [<SkuLocationAssoc ('C2-W-L', 'hg-1')>, ]
+    locations = relationship("SkuLocationAssoc", back_populates="sku",
+                 lazy="selectin", passive_deletes=True)
 
     def __init__(self, sku, upc, description, owner_id, container_id):
         self.sku = sku
@@ -91,7 +99,7 @@ class ProductSku(Base, CRUDMixin, SurrogatePK):
         return f'<ProductSku {self.sku, self.owner}>'
 
 
-class SkuAttribute(Base, CRUDMixin, SurrogatePK):
+class SkuAttribute(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A table allowing the creation of key:value grouping designations for SKUS.
     Like, Sku Family (Grapple, Flux-Field, ...) and Sku Class ('Pro', 'Grip', ...).

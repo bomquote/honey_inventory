@@ -1,4 +1,6 @@
-from sqlalchemy import (create_engine, Integer, Column, ForeignKey, MetaData)
+import pendulum
+from sqlalchemy import (create_engine, Integer, Column, ForeignKey, MetaData,
+                        TypeDecorator, DateTime)
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, relationship, backref
 
@@ -22,6 +24,9 @@ session = Session()
 # create the Base to inherit in the Model
 Base = declarative_base(metadata=metadata)
 
+def time_utcnow():
+    """Returns a timezone aware utc timestamp."""
+    return pendulum.now('UTC')
 
 class CRUDMixin:
     """Mixin that adds convenience methods for CRUD (create, read, update,
@@ -76,6 +81,37 @@ class SurrogatePK(object):
         ):
             return cls.query.get(int(record_id))
         return None
+
+class UTCDateTime(TypeDecorator):
+
+    impl = DateTime
+
+    def process_bind_param(self, value, dialect):
+        """Way into the database."""
+        if value is not None:
+            # store naive datetime for sqlite and mysql
+            if dialect.name in ("sqlite", "mysql"):
+                return value.replace(tzinfo=None)
+
+            return value.astimezone(pendulum.UTC)
+
+    def process_result_value(self, value, dialect):
+        """Way out of the database."""
+        # convert naive datetime to non naive datetime
+        if dialect.name in ("sqlite", "mysql") and value is not None:
+            return value.replace(tzinfo=pendulum.UTC)
+
+        # other dialects are already non-naive
+        return value
+
+
+class AuditMixin:
+    """Convenience fields to DRY up tables that need to track the user that
+        created or updated a record and the time of the create or update"""
+
+    created_at = Column(UTCDateTime(timezone=True), default=time_utcnow, index=True)
+    updated_on = Column(UTCDateTime(timezone=True), default=time_utcnow,
+                        onupdate=time_utcnow)
 
 
 def reference_col(tablename, pk_name='id', fk_kwargs=None,
