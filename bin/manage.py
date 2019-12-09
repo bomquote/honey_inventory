@@ -26,16 +26,26 @@ def delete_warehouse(name):
     Warehouse.delete(wh)
     return print(f'Deleted warehouse {name}.')
 
-def last_active_warehouse():
-    """Returns the name last active warehouse in the DB."""
-    wh = session.query(Warehouse).order_by()
 
 @inv.command()
-@click.option("--warehouse", prompt="Enter new inventory location warehouse name", help="Select warehouse.")
-def create_location(name):
+@click.option("--warehouse",
+              prompt="Warehouse where location should be created",
+              default="Garage", help="Select warehouse.")
+@click.option("--label", prompt="Enter a name for the inventory location label",
+              default="Required", help="Create a location label.")
+def create_location(warehouse, label):
     """Create a warehouse, where a warehouse is a container for inventory locations."""
-    Warehouse.create(name=name)
-    print(f'Created warehouse {name}')
+    if label == 'Required':
+        return print("You must provide a new location label.")
+    wh = session.query(Warehouse).filter_by(name=warehouse).first()
+    if not wh:
+        return print(f"The {warehouse} warehouse doesn't exist.")
+    record = session.query(InventoryLocation).filter(
+        InventoryLocation.label == label,
+        InventoryLocation.warehouse_id == wh.id).first()
+    if record:
+        return print(f"The label {label} alrady exists in the {warehouse} warehouse.")
+    print(f'Created location')
 
 @inv.command()
 @click.option("--name", prompt="Enter warehouse name to delete", help="Delete a warehouse.")

@@ -53,6 +53,7 @@ class Container(Base, CRUDMixin, SurrogatePK, AuditMixin):
     def __repr__(self):
         return f'<Container {self.name}>'
 
+
 class ProductSku(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     The base model for Product Skus.
