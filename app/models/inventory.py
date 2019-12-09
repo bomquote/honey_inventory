@@ -34,20 +34,16 @@ class InventoryLocation(Base, CRUDMixin, SurrogatePK, AuditMixin):
     __tablename__ = 'inventory_locations'
     __table_args__ = (UniqueConstraint('label', 'warehouse_id'),)
     label = Column('label', Unicode(), nullable=False)
-    warehouse_id = Column('warehouse_id', Integer,
-                    ForeignKey("warehouses.id",
-                               onupdate="CASCADE",
-                               ondelete="CASCADE"),
-                    primary_key=True)
+    warehouse_id = reference_col('warehouses')
 
     warehouse = relationship("Warehouse", backref="inventory_locations",
-                                cascade="all, delete",
+                                cascade="save-update, merge",
                                 single_parent=True)
 
     skus = relationship(
         "SkuLocationAssoc", back_populates="location",
         primaryjoin="sku_locations.c.location_id == InventoryLocation.id",
-        lazy="dynamic", cascade="all, delete-orphan", passive_deletes=True)
+        lazy="selectin", cascade="all, delete-orphan", passive_deletes=True)
 
     def __init__(self, label, warehouse_id):
         self.label = label
