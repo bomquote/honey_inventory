@@ -1,15 +1,16 @@
-# -*- coding: utf-8 -*-
-"""Defines fixtures available to all tests."""
+"""
+PyTest Fixtures.
+"""
 
-import sys
-import os
-import time
-import py
 import pytest
-from os.path import dirname as d
-from os.path import abspath, join
-from _pytest.tmpdir import _mk_tmp
-from webtest import TestApp
+from cement import fs
 
-root_dir = d(d(abspath(__file__)))
-sys.path.append(root_dir)
+@pytest.fixture(scope="function")
+def tmp(request):
+    """
+    Create a `tmp` object that geneates a unique temporary directory, and file
+    for each test function that requires it.
+    """
+    t = fs.Tmp()
+    yield t
+    t.remove()
