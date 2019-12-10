@@ -25,8 +25,8 @@ class InventoryLocation(Base, CRUDMixin, SurrogatePK, AuditMixin):
     a Container which may hold multiple different SKUs. For example, we have mixed
     boxes of retail packaged products and this will enable us to just put a label on
     each box and call that label the "location". Then, I can populate a location
-    with SKUs and relate them in the many-many table. I'm sure this could be made
-    more complex in the future but it may be all we ever need.
+    with SKUs and relate them in the Association object table. I'm sure this can be made
+    more complex in the future but it may be all we ever need now.
 
     NOTE for changes: this model is imported in alembic/env.py for migrations.
     """
@@ -57,10 +57,12 @@ class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK, AuditMixin):
     """
     An association object for Skus and Locations. The left side of the relationship
     maps a Sku as a one-to-many to InventoryLocations. This allows one SKU to have many
-    InventoryLocations. The association allows to add some extra data like
-    sku quantity in the location, cost, sales price, then the association class maps a
-    many-to-one to the InventoryLocation.  Use hybrid relationships to work
-    with this table.
+    InventoryLocations, offering significant flexibility when combined with the
+    ease of creating transient locatins. The association allows to add some extra data
+    like sku quantity in the location, and could potentially capture items like cost
+    and sales price here as well. Then, the association class maps a
+    many-to-one to the InventoryLocation. Finally, we can use hybrid relationships to
+    work with this table.
     """
     __tablename__ = 'sku_locations'
     # parent is ProductSku

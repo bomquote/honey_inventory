@@ -9,12 +9,14 @@ from app.database import session
 def inv():
     pass
 
+
 @inv.command()
 @click.option("--name", prompt="Enter new warehouse name", help="Create a warehouse.")
 def create_warehouse(name):
     """Create a warehouse, where a warehouse is a container for inventory locations."""
     Warehouse.create(name=name)
     print(f'Created warehouse {name}')
+
 
 @inv.command()
 @click.option("--name", prompt="Enter warehouse name to delete", help="Delete a warehouse.")
@@ -318,11 +320,18 @@ def adjust_sku_qty(warehouse, label):
         # transfer the target SKU from original location to the new location
         update_quantity = input(
             "Enter the updated total quantity for the SKU [Required]: ") or 'Required'
-        if not int(update_quantity):
-            return print('Invalid quantity. Transaction Cancelled.')
+            # return print('Invalid quantity. Transaction Cancelled.')
+        try:
+            int(update_quantity)
+        except ValueError:
+            return print(
+                f"Transaction cancelled as {update_quantity} is an invalid integer quantity.")
         for inst in original_location.skus:
             if inst.sku.id == target_sku_obj.id:
-                inst.update(quantity=int(update_quantity))
+                if int(update_quantity) == 0:
+                    inst.delete()
+                else:
+                    inst.update(quantity=int(update_quantity))
         return print(f'Updated {target_sku_obj.sku} to quantity {int(update_quantity)}')
     # InventoryLocation.create(label=label, warehouse_id=wh.id)
     if original_location:
@@ -334,7 +343,7 @@ def adjust_sku_qty(warehouse, label):
 @inv.command()
 @click.option("--count", default=1, help="Number of repeats.")
 @click.option("--name", prompt="Your Name", help="Name of the person scanning.")
-def scan_processor(count, name):
+def scan_location(count, name):
     """Scan a UCC code and do something with it."""
     while True:
         ucc = input('Scan a UCC: ')
