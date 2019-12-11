@@ -1,5 +1,6 @@
 from pytest import raises
-from honey.main import HoneyTest
+from honey.honey import HoneyTest
+
 
 def test_app():
     # test app without any subcommands or arguments
@@ -21,15 +22,14 @@ def test_command1():
     argv = ['command1']
     with HoneyTest(argv=argv) as app:
         app.run()
-        data,output = app.last_rendered
+        data, output = app.last_rendered
         assert data['foo'] == 'bar'
         assert output.find('Foo => bar')
-
 
     # test command1 with arguments
     argv = ['command1', '--foo', 'not-bar']
     with HoneyTest(argv=argv) as app:
         app.run()
-        data,output = app.last_rendered
+        data, output = app.last_rendered
         assert data['foo'] == 'not-bar'
         assert output.find('Foo => not-bar')
