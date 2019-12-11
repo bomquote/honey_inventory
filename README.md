@@ -1,4 +1,4 @@
-# Honey Inventory: Command Line Inventory Control
+# Honey Inventory: sweet command line inventory control
 
 ## Installation
 

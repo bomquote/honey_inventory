@@ -2,7 +2,8 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from app.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from honey.core.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from cement.core.handler import Handler
 
 
 class Warehouse(Base, CRUDMixin, SurrogatePK, AuditMixin):

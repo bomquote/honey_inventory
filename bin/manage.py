@@ -1,9 +1,10 @@
 import click
 import os
-from app.models.skus import ProductSku
-from app.models import (Warehouse, InventoryLocation, SkuLocationAssoc, SkuOwner,
+from honey.models.skus import ProductSku
+from honey.models import (Warehouse, InventoryLocation, SkuLocationAssoc, SkuOwner,
                         Container, ProductSku, SkuAttribute)
-from app.database import session
+
+from honey.core.database import session
 
 @click.group()
 def inv():

@@ -4,7 +4,7 @@ from cement.utils.version import get_version_banner
 from ..core.version import get_version
 
 VERSION_BANNER = """
-MyApp Does Amazing Things! %s
+Sweet command line inventory control! %s
 %s
 """ % (get_version(), get_version_banner())
 
@@ -14,25 +14,22 @@ class Base(Controller):
         label = 'base'
 
         # text displayed at the top of --help output
-        description = 'MyApp Does Amazing Things!'
+        description = 'Honey Inventory: Sweet command line inventory control!'
 
         # text displayed at the bottom of --help output
-        epilog = 'Usage: app command1 --foo bar'
+        epilog = 'Usage: honey command1 --foo bar'
 
         # controller level arguments. ex: 'app --version'
         arguments = [
-            ### add a version banner
-            ( [ '-v', '--version' ],
-              { 'action'  : 'version',
-                'version' : VERSION_BANNER } ),
+            (['-v', '--version'],
+             {'action': 'version',
+              'version': VERSION_BANNER}),
         ]
-
 
     def _default(self):
         """Default action if no sub-command is passed."""
 
         self.app.args.print_help()
-
 
     @ex(
         help='example sub command1',
@@ -40,17 +37,17 @@ class Base(Controller):
         # sub-command level arguments. ex: 'app command1 --foo bar'
         arguments=[
             ### add a sample foo option under subcommand namespace
-            ( [ '-f', '--foo' ],
-              { 'help' : 'notorious foo option',
-                'action'  : 'store',
-                'dest' : 'foo' } ),
+            (['-f', '--foo'],
+              {'help': 'notorious foo option',
+                'action': 'store',
+                'dest': 'foo'}),
         ],
     )
     def command1(self):
         """Example sub-command."""
 
         data = {
-            'foo' : 'bar',
+            'foo': 'bar',
         }
 
         ### do something with arguments

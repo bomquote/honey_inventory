@@ -1,6 +1,6 @@
 
 from setuptools import setup, find_packages
-from app.core.version import get_version
+from honey.core.version import get_version
 
 VERSION = get_version()
 
@@ -9,20 +9,20 @@ LONG_DESCRIPTION = f.read()
 f.close()
 
 setup(
-    name='app',
+    name='honey-inventory',
     version=VERSION,
-    description='MyApp Does Amazing Things!',
+    description='Sweet command line inventory control',
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     author='Bob Jordan',
     author_email='bmjjr@bomquote.com',
-    url='https://github.com/bmjjr/hg_inventory',
+    url='https://github.com/bomquote/honey-inventory',
     license='MIT',
     packages=find_packages(exclude=['ez_setup', 'tests*']),
-    package_data={'app': ['templates/*']},
+    package_data={'honey': ['templates/*']},
     include_package_data=True,
     entry_points="""
         [console_scripts]
-        app = app.main:main
+        honey = honey.honey:main
     """,
 )

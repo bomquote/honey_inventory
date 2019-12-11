@@ -4,7 +4,7 @@ clean:
 	find . -name '*.py[co]' -delete
 
 virtualenv:
-	virtualenv --prompt '|> app <| ' env
+	virtualenv --prompt '|> honey <| ' env
 	env/bin/pip install -r requirements-dev.txt
 	env/bin/python setup.py develop
 	@echo

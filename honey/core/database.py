@@ -1,3 +1,17 @@
+"""
+
+from tabulate import tabulate
+table = [["Sun", 696000, 1989100000], ["Earth", 6371, 5973.6],
+                     ["Moon", 1737, 73.5], ["Mars", 3390, 641.85]]
+print(tabulate(table))
+-----  ------  -------------
+Sun    696000     1.9891e+09
+Earth    6371  5973.6
+Moon     1737    73.5
+Mars     3390   641.85
+-----  ------  -------------
+"""
+
 import pendulum
 from sqlalchemy import (create_engine, Integer, Column, ForeignKey, MetaData,
                         TypeDecorator, DateTime)
@@ -15,18 +29,38 @@ metadata = MetaData(
     }
 )
 
+# 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
 # create an engine
 engine = create_engine('postgresql+psycopg2://postgres:password@localhost:5432/hgdb')
 # create a configured "Session" class
 Session = sessionmaker(bind=engine)
 # create a Session
 session = Session()
-# create the Base to inherit in the Model
 Base = declarative_base(metadata=metadata)
+
+
+def extend_sqla(app):
+    """
+    hook for cement framework to extend and have self.app.session
+    for now, I'm just importing session from here thorughout the app
+    """
+    # app.log.info('extending Honey application with sqlalchemy')
+    # db_connection = app.config.get('honey', 'db_connection')
+    # app.log.info(f'the db_connection string is : {db_connection}')
+    # 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
+    # create an engine
+    # engine = create_engine(db_connection)
+    # create a configured "Session" class
+    # Session = sessionmaker(bind=engine)
+    # create a Session
+    # session = Session()
+    app.extend('session', session)
+
 
 def time_utcnow():
     """Returns a timezone aware utc timestamp."""
     return pendulum.now('UTC')
+
 
 class CRUDMixin:
     """Mixin that adds convenience methods for CRUD (create, read, update,
@@ -82,6 +116,7 @@ class SurrogatePK(object):
             return cls.query.get(int(record_id))
         return None
 
+
 class UTCDateTime(TypeDecorator):
 
     impl = DateTime
@@ -135,6 +170,3 @@ def reference_col(tablename, pk_name='id', fk_kwargs=None,
     return Column(
         ForeignKey('{0}.{1}'.format(tablename, pk_name), **fk_kwargs),
         **col_kwargs)
-
-
-

@@ -1,7 +1,9 @@
-### HG Inventory Configuration Settings
+# Honey Inventory Configuration Settings
+# Intended to be used by the end-user
+# https://docs.builtoncement.com/core-foundation/configuration-settings#configuration-settings-vs-meta-options
 ---
 
-app:
+honey:
 
 ### Toggle application level debug (does not toggle framework debugging)
 # debug: false
@@ -22,8 +24,10 @@ app:
 # output_handler: jinja2
 
 ### sample foo option
-# foo: bar
+  foo: barely
 
+### Database connection
+  db_connection: 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
 
 log.colorlog:
 

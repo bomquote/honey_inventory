@@ -2,8 +2,8 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from app.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
-from app.models.inventory import SkuLocationAssoc
+from honey.core.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from honey.models.inventory import SkuLocationAssoc
 
 # one ProductSku can have many different SkuAttributes.
 # one SkuAttribute can have stock in many ProductSku's.

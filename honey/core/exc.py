@@ -1,4 +1,4 @@
 
-class MyAppError(Exception):
+class HoneyError(Exception):
     """Generic errors."""
     pass
