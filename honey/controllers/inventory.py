@@ -92,6 +92,36 @@ class WarehouseController(Controller):
         else:
             self.app.log.info(f"A warehouse with id='{id}' does not exist.")
 
-    @ex(help='set active warehouse')
-    def set(self):
-        pass
+    @ex(
+        help='set active warehouse',
+        arguments=[
+            (['wh_name_or_id'],
+             {'help': 'warehouse database name or id',
+              'action': 'store'})
+        ],
+        )
+    def activate(self):
+        if self.app.pargs.wh_name_or_id.isnumeric():
+            id = int(self.app.pargs.wh_name_or_id)
+            wh_obj = Warehouse.get_by_id(id)
+        else:
+            wh_obj = session.query(
+                Warehouse).filter_by(name=self.app.pargs.wh_name_or_id).first()
+        if wh_obj:
+            self.deactivate()
+            self.app.cache.set(f'honey-active_warehouse', wh_obj.name)
+            self.app.log.info(f"Activating warehouse '{wh_obj.name}' with id='{wh_obj.id}'.")
+        else:
+            self.app.log.info(
+                f"A warehouse with the identifier {self.app.pargs.wh_name_or_id} does not exist.")
+
+    @ex(
+        help='clear active warehouse'
+    )
+    def deactivate(self):
+        active_warehouse = self.app.cache.get('honey-active_warehouse')
+        if active_warehouse:
+            self.app.log.info(f"Deactivated warehouse '{active_warehouse}'.")
+            self.app.cache.delete(f'honey-active_warehouse')
+        else:
+            self.app.log.info(f"No active warehouse.")
