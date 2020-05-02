@@ -2,19 +2,19 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import sessionmaker, relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from honey.core.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, reference_col
 from honey.models.inventory import SkuLocationAssoc
 
 # one ProductSku can have many different SkuAttributes.
 # one SkuAttribute can have stock in many ProductSku's.
 productsku_skuattr_assoc = Table(
-    'productskus_skuattrs', Base.metadata,
+    'productskus_skuattrs', ModelBase.metadata,
     Column('sku_id', Integer, ForeignKey('product_skus.id')),
     Column('skuattr_id', Integer, ForeignKey('sku_attrs.id'))
 )
 
 
-class SkuOwner(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class SkuOwner(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """A table designating ultimate owners of product SKUs. Equivalent to
     customer or account name. Parent -> SkuOwner, Child -> ProductSku. """
     __tablename__ = 'sku_owners'
@@ -29,7 +29,7 @@ class SkuOwner(Base, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<SkuOwner {self.name}>'
 
 
-class Container(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class Container(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A table to hold the various ProductSku containers. It has a self-referential
     relationship so that a container which contains another container can be
@@ -54,7 +54,7 @@ class Container(Base, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<Container {self.name}>'
 
 
-class ProductSku(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class ProductSku(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     The base model for Product Skus.
 
@@ -100,7 +100,7 @@ class ProductSku(Base, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<ProductSku {self.sku, self.owner}>'
 
 
-class SkuAttribute(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class SkuAttribute(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A table allowing the creation of key:value grouping designations for SKUS.
     Like, Sku Family (Grapple, Flux-Field, ...) and Sku Class ('Pro', 'Grip', ...).
@@ -109,6 +109,10 @@ class SkuAttribute(Base, CRUDMixin, SurrogatePK, AuditMixin):
     like length, width, height, and weight. Also use 'retail-capacity' and
     'child-capacity' here as keys with the value being the Unicode integer
     representation. You can cast those to integers when needed for summation.
+    todo: a better data structure for this might be a jsonb in postgres as
+        it would eliminate redundant keys in the db for each owner_id. But
+        the owner_id reference column should make current structure speed
+        efficient and changing it likely nitpicking.
     """
     __tablename__ = 'sku_attrs'
     # key should be like "family", "class", "color", 'connector'

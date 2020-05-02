@@ -33,3 +33,21 @@ def test_command1():
         data, output = app.last_rendered
         assert data['foo'] == 'not-bar'
         assert output.find('Foo => not-bar')
+
+### warehouse
+
+
+class TestWarehouse:
+    """Warehouse tests."""
+
+    def test_warehouse_list(self, db_func, warehouse):
+        """
+        Test `honey_warehouse_list.  This is returned as a tabulate table.
+        :return:
+        """
+        argv = ['warehouse', 'list']
+        with HoneyTest(argv=argv) as app:
+            app.run()
+            # data, output = app.last_rendered
+            # print(type(res))
+            # assert output.find('Garage')

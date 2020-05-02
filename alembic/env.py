@@ -18,10 +18,10 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-from honey.core.database import Base
+from honey.core.database import ModelBase
 from honey.models.skus import ProductSku
 from honey.models.inventory import InventoryLocation
-target_metadata = Base.metadata
+target_metadata = ModelBase.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

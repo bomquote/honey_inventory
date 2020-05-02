@@ -11,12 +11,22 @@ Moon     1737    73.5
 Mars     3390   641.85
 -----  ------  -------------
 """
-
+import yaml
 import pendulum
 from sqlalchemy import (create_engine, Integer, Column, ForeignKey, MetaData,
                         TypeDecorator, DateTime)
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-from sqlalchemy.orm import sessionmaker, relationship, backref
+from sqlalchemy.orm import sessionmaker, scoped_session, relationship, backref
+import pathlib
+
+config_file = pathlib.Path.home() / 'PycharmProjects' / 'hg_inventory' / 'config' / 'honey.yml'
+# config_file = config_dir / 'honey.yml'
+# parse YAML config file
+
+with open(config_file, 'r') as stream:
+    config_data = yaml.safe_load(stream)
+
+conn = config_data['honey']['DB_CONNECTION']
 
 # Database see http://alembic.zzzcomputing.com/en/latest/naming.html
 metadata = MetaData(
@@ -29,14 +39,13 @@ metadata = MetaData(
     }
 )
 
-# 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
 # create an engine
-engine = create_engine('postgresql+psycopg2://postgres:password@localhost:5432/hgdb')
+engine = create_engine(conn)
 # create a configured "Session" class
-Session = sessionmaker(bind=engine)
+Session = scoped_session(sessionmaker(bind=engine))
 # create a Session
 session = Session()
-Base = declarative_base(metadata=metadata)
+ModelBase = declarative_base(metadata=metadata)
 
 
 def extend_sqla(app):

@@ -26,8 +26,18 @@ honey:
 ### sample foo option
   foo: barely
 
-### Database connection
-  db_connection: 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
+### Database connection currently hard coded in honey.core.database and test.confftest
+  DB_CONNECTION: 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
+
+### Redis cache keys
+  WAREHOUSE_CACHE_KEY: 'honey-active-warehouse'
+
+honeytest:
+
+  DB_CONNECTION: 'postgresql+psycopg2://postgres:password@localhost:5432/hgdbtest'
+  WAREHOUSE_CACHE_KEY: 'honeytest-active-warehouse'
+
+
 
 log.colorlog:
 

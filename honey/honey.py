@@ -1,27 +1,27 @@
-
-from cement import App, TestApp, init_defaults
+import yaml
+from cement import App, TestApp
 from cement.core.exc import CaughtSignal
 from honey.core.exc import HoneyError
 from honey.controllers.base import Base
 from honey.controllers.inventory import WarehouseController
 from honey.ext.redis import HoneyRedisCacheHandler
 
-from time import sleep
+import pathlib
 
-# configuration defaults
-CONFIG = init_defaults('honey')
-# CONFIG['honey']['db_connection'] = 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
-CONFIG['honey']['foo'] = 'bar'
+config_file = str(pathlib.Path.cwd().parent / 'config' / 'honey.yml')
+# config_file = config_dir / 'honey.yml'
+# parse YAML config file
 
+with open(config_file, 'r') as stream:
+    config_data = yaml.safe_load(stream)
+
+TEST_CONFIG = config_data['honeytest']
 
 class Honey(App):
     """Honey Inventory primary application."""
 
     class Meta:
         label = 'honey'
-
-        # configuration defaults
-        config_defaults = CONFIG
 
         # call sys.exit() on close
         exit_on_close = True
@@ -71,6 +71,9 @@ class HoneyTest(TestApp, Honey):
 
     class Meta:
         label = 'honey'
+
+        config_defaults = TEST_CONFIG
+        config_section = 'honeytest'
 
 
 def main():

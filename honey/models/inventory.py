@@ -2,11 +2,11 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.associationproxy import association_proxy
-from honey.core.database import Base, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, reference_col
 from cement.core.handler import Handler
 
 
-class Warehouse(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A Warehouse is an InventoryLocation container.
     """
@@ -20,7 +20,7 @@ class Warehouse(Base, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<Warehouse {self.name}>'
 
 
-class InventoryLocation(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A location for a Sku. Right now I think of this as a unique name/number for
     a Container which may hold multiple different SKUs. For example, we have mixed
@@ -54,7 +54,7 @@ class InventoryLocation(Base, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<InventoryLocation {self.label, self.warehouse.name}>'
 
 
-class SkuLocationAssoc(Base, CRUDMixin, SurrogatePK, AuditMixin):
+class SkuLocationAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     An association object for Skus and Locations. The left side of the relationship
     maps a Sku as a one-to-many to InventoryLocations. This allows one SKU to have many

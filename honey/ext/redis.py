@@ -6,7 +6,7 @@ from cement.ext.ext_redis import RedisCacheHandler
 
 class HoneyRedisCacheHandler(RedisCacheHandler):
     """
-    Override the default implementation meta to set the redis db to 1
+    Override the default implementation to enable customizing the db meta
     """
 
     class Meta:
@@ -17,6 +17,6 @@ class HoneyRedisCacheHandler(RedisCacheHandler):
         config_defaults = dict(
             host='127.0.0.1',
             port=6379,
-            db=1,
+            db=0,
             expire_time=0,
         )

@@ -8,6 +8,14 @@ $ pip install -r requirements.txt
 $ pip install setup.py
 ```
 
+To run the application, navigate to the config folder:
+
+```cmd
+c:\Users\bjord\PycharmProjects\hg_inventory\config>
+```
+
+Then, run the `honey` command.  For help, run `honey --help`.
+
 ## Development
 
 This project includes a number of helpers in the `Makefile` to streamline common development tasks.

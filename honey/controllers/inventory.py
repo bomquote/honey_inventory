@@ -2,6 +2,7 @@ from cement import Controller, ex
 from honey.core.database import session
 from honey.models.inventory import Warehouse, InventoryLocation, SkuLocationAssoc
 from tabulate import tabulate
+import sys
 
 
 class WarehouseController(Controller):
@@ -26,14 +27,14 @@ class WarehouseController(Controller):
         [<Warehouse Garage>, <Warehouse Office>, <Warehouse Kitchen>, <Warehouse Bathroom>]
         {'result': {'1': 'Garage', '2': 'Office', '6': 'Kitchen', '7': 'Bathroom'}}
         """
-        warehouses = session.query(Warehouse).all()
+        warehouses = self.app.session.query(Warehouse).all()
         # for tabulate
         data = [['#', 'id', 'name']]
         count = 0
         for record in warehouses:
             count += 1
             data.append([count, record.id, record.name])
-        print(tabulate(data, headers="firstrow", tablefmt="grid"))
+        sys.stdout.write(tabulate(data, headers="firstrow", tablefmt="grid"))
 
     @ex(
         help='create new warehouse',
@@ -52,8 +53,8 @@ class WarehouseController(Controller):
     @ex(
         help='update a warehouse name to newname',
         arguments=[
-            (['warehouse_id'],
-             {'help': 'warehouse database id',
+            (['identifier'],
+             {'help': 'warehouse database name or id',
               'action': 'store'}),
             (['--name'],
              {'help': 'updated warehouse name',
@@ -68,12 +69,19 @@ class WarehouseController(Controller):
         usage: honey warehouse uu <id> --name <newname>
 
         """
-        id = int(self.app.pargs.warehouse_id)
-        name = self.app.pargs.new_name
-        # wh_obj = session.query(Warehouse).filter_by(name=name).first()
-        wh_obj = Warehouse.get_by_id(id)
-        self.app.log.info(f"updating warehouse name from '{wh_obj.name}' to '{name}'")
-        wh_obj.update(name=name)
+        if self.app.pargs.identifier.isnumeric():
+            wh_id = int(self.app.pargs.identifier)
+            wh_obj = Warehouse.get_by_id(wh_id)
+        else:
+            wh_obj = session.query(
+                Warehouse).filter_by(name=self.app.pargs.identifier).first()
+        if wh_obj:
+            name = self.app.pargs.new_name
+            self.app.log.info(f"updating warehouse name from '{wh_obj.name}' to '{name}'")
+            wh_obj.update(name=name)
+        else:
+            self.app.log.info(
+                f"No warehouse with the identifier {self.app.pargs.identifier} exists.")
 
     @ex(
         help='delete a warehouse',
@@ -95,33 +103,36 @@ class WarehouseController(Controller):
     @ex(
         help='set active warehouse',
         arguments=[
-            (['wh_name_or_id'],
+            (['identifier'],
              {'help': 'warehouse database name or id',
               'action': 'store'})
         ],
         )
     def activate(self):
-        if self.app.pargs.wh_name_or_id.isnumeric():
-            id = int(self.app.pargs.wh_name_or_id)
-            wh_obj = Warehouse.get_by_id(id)
+        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
+        if self.app.pargs.identifier.isnumeric():
+            wh_id = int(self.app.pargs.identifier)
+            wh_obj = Warehouse.get_by_id(wh_id)
         else:
-            wh_obj = session.query(
-                Warehouse).filter_by(name=self.app.pargs.wh_name_or_id).first()
+            wh_obj = self.app.session.query(
+                Warehouse).filter_by(name=self.app.pargs.identifier).first()
         if wh_obj:
             self.deactivate()
-            self.app.cache.set(f'honey-active_warehouse', wh_obj.name)
+            # todo: use a config instead of hard coding the cache key
+            self.app.cache.set(wh_cache_key, wh_obj.name)
             self.app.log.info(f"Activating warehouse '{wh_obj.name}' with id='{wh_obj.id}'.")
         else:
             self.app.log.info(
-                f"A warehouse with the identifier {self.app.pargs.wh_name_or_id} does not exist.")
+                f"A warehouse with the identifier {self.app.pargs.identifier} does not exist.")
 
     @ex(
         help='clear active warehouse'
     )
     def deactivate(self):
-        active_warehouse = self.app.cache.get('honey-active_warehouse')
+        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
+        active_warehouse = self.app.cache.get(wh_cache_key)
         if active_warehouse:
             self.app.log.info(f"Deactivated warehouse '{active_warehouse}'.")
-            self.app.cache.delete(f'honey-active_warehouse')
+            self.app.cache.delete(wh_cache_key)
         else:
             self.app.log.info(f"No active warehouse.")
