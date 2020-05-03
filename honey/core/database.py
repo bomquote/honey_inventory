@@ -17,9 +17,8 @@ from sqlalchemy import (create_engine, Integer, Column, ForeignKey, MetaData,
                         TypeDecorator, DateTime)
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship, backref
-import pathlib
+from honey import config_file
 
-config_file = pathlib.Path.cwd() / 'config' / 'honey.yml'
 
 with open(config_file, 'r') as stream:
     config_data = yaml.safe_load(stream)
@@ -49,7 +48,7 @@ ModelBase = declarative_base(metadata=metadata)
 def extend_sqla(app):
     """
     hook for cement framework to extend and have self.app.session
-    for now, I'm just importing session from here thorughout the app
+    for now, I'm just importing session from here throughout the app
     """
     # app.log.info('extending Honey application with sqlalchemy')
     # db_connection = app.config.get('honey', 'db_connection')

@@ -1,16 +1,13 @@
 import yaml
-from cement import App, TestApp, init_defaults
+from cement import App, TestApp
 from cement.core.exc import CaughtSignal
+from honey import config_file
+from honey.core.database import extend_sqla
 from honey.core.exc import HoneyError
 from honey.controllers.base import Base
 from honey.controllers.inventory import WarehouseController
 from honey.ext.redis import HoneyRedisCacheHandler
 
-import pathlib
-config_file = pathlib.Path.cwd() / 'config' / 'honey.yml'
-
-# config_file = config_dir / 'honey.yml'
-# parse YAML config file
 
 with open(config_file, 'r') as stream:
     config_data = yaml.safe_load(stream)
@@ -63,7 +60,7 @@ class Honey(App):
         ]
 
         hooks = [
-            # ('post_setup', extend_sqla),
+            ('post_setup', extend_sqla),
         ]
 
         # not currently using the bootstrap method

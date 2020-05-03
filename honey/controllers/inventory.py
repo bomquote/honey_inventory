@@ -1,5 +1,4 @@
 from cement import Controller, ex
-from honey.core.database import session
 from honey.models.inventory import Warehouse, InventoryLocation, SkuLocationAssoc
 from honey.core.exc import HoneyError
 from tabulate import tabulate
@@ -28,7 +27,7 @@ class WarehouseController(Controller):
         [<Warehouse Garage>, <Warehouse Office>, <Warehouse Kitchen>, <Warehouse Bathroom>]
         {'result': {'1': 'Garage', '2': 'Office', '6': 'Kitchen', '7': 'Bathroom'}}
         """
-        warehouses = session.query(Warehouse).all()
+        warehouses = self.app.session.query(Warehouse).all()
         # for tabulate
         data = [['#', 'id', 'name']]
         count = 0
@@ -75,7 +74,7 @@ class WarehouseController(Controller):
             wh_id = int(self.app.pargs.identifier)
             wh_obj = Warehouse.get_by_id(wh_id)
         else:
-            wh_obj = session.query(
+            wh_obj = self.app.session.query(
                 Warehouse).filter_by(name=self.app.pargs.identifier).first()
         if wh_obj:
             name = self.app.pargs.new_name
