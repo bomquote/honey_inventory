@@ -19,9 +19,7 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.orm import sessionmaker, scoped_session, relationship, backref
 import pathlib
 
-config_file = pathlib.Path.home() / 'PycharmProjects' / 'hg_inventory' / 'config' / 'honey.yml'
-# config_file = config_dir / 'honey.yml'
-# parse YAML config file
+config_file = pathlib.Path.cwd() / 'config' / 'honey.yml'
 
 with open(config_file, 'r') as stream:
     config_data = yaml.safe_load(stream)

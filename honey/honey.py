@@ -1,5 +1,5 @@
 import yaml
-from cement import App, TestApp
+from cement import App, TestApp, init_defaults
 from cement.core.exc import CaughtSignal
 from honey.core.exc import HoneyError
 from honey.controllers.base import Base
@@ -7,14 +7,15 @@ from honey.controllers.inventory import WarehouseController
 from honey.ext.redis import HoneyRedisCacheHandler
 
 import pathlib
+config_file = pathlib.Path.cwd() / 'config' / 'honey.yml'
 
-config_file = str(pathlib.Path.cwd().parent / 'config' / 'honey.yml')
 # config_file = config_dir / 'honey.yml'
 # parse YAML config file
 
 with open(config_file, 'r') as stream:
     config_data = yaml.safe_load(stream)
 
+CONFIG = config_data['honey']
 TEST_CONFIG = config_data['honeytest']
 
 class Honey(App):
@@ -22,6 +23,9 @@ class Honey(App):
 
     class Meta:
         label = 'honey'
+
+        config_defaults = CONFIG
+        config_section = 'honey'
 
         # call sys.exit() on close
         exit_on_close = True
