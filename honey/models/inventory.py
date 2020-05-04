@@ -9,7 +9,7 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     A Warehouse is an InventoryLocation container.
     """
     __tablename__ = 'warehouses'
-    name = Column('name', Unicode())
+    name = Column('name', Unicode(), unique=True)
 
     def __init__(self, name):
         self.name = name

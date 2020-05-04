@@ -5,7 +5,9 @@ This module is the entrypoint for alembic migrations
 import click
 import os
 from alembic import config as alembic_config
+import pathlib
 
+repo = pathlib.Path.home() / 'repos' / 'honey_inventory'
 
 @click.group()
 def db():
@@ -21,7 +23,7 @@ def upgrade(identifier):
     https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers
     https://alembic.sqlalchemy.org/en/latest/tutorial.html#relative-migration-identifiers
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     alembic_config.main(argv=['upgrade', f'{identifier}'])
 
 @db.command()
@@ -34,7 +36,7 @@ def downgrade(identifier):
     https://alembic.sqlalchemy.org/en/latest/tutorial.html#partial-revision-identifiers
     https://alembic.sqlalchemy.org/en/latest/tutorial.html#relative-migration-identifiers
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     alembic_config.main(argv=['downgrade', f'{identifier}'])
 
 
@@ -50,7 +52,7 @@ def revision(message, autogenerate):
     Lot's more functionality not implemented here. See:
     https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.revision
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     if autogenerate == 'True':
         alembic_config.main(argv=['revision', '--autogenerate', f'-m "{message}"'])
     else:
@@ -61,7 +63,7 @@ def revision(message, autogenerate):
 @click.option("--verbose", prompt="Use Verbose?", default="True", help="Return a verbose info response?")
 def current(verbose):
     """Get information about the state of the current revision."""
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     if not verbose == "True":
         alembic_config.main(argv=['current'])
     else:
@@ -76,7 +78,7 @@ def show(identifier):
     see:
     https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.show
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     alembic_config.main(argv=['show', f'{identifier}'])
 
 
@@ -87,7 +89,7 @@ def heads(verbose):
     see:
     https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.heads
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     if verbose == "False":
         alembic_config.main(argv=['heads'])
     else:
@@ -101,7 +103,7 @@ def stamp(identifier):
     see:
     https://alembic.sqlalchemy.org/en/latest/api/commands.html?highlight=stamp#alembic.command.stamp
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     alembic_config.main(argv=['stamp', f'{identifier}'])
 
 
@@ -114,7 +116,7 @@ def history(verbose, history_range):
     Supports viewing history ranges, see:
     https://alembic.sqlalchemy.org/en/latest/tutorial.html#viewing-history-ranges
     """
-    os.chdir('C:\\Users\\bjord\\PycharmProjects\\hg_inventory')
+    os.chdir(repo)
     if not verbose == "True":
         if history_range == "False":
             alembic_config.main(argv=['history'])

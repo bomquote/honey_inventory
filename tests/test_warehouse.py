@@ -26,3 +26,10 @@ class TestWarehouse:
             final_count = app.session.query(Warehouse).count()
             assert initial_count + 1 == final_count
             assert 'testwh' in [wh.name for wh in app.session.query(Warehouse).all()]
+
+    def test_warehouse_update(self, HoneyApp, hooks, db, warehouse):
+        """
+        Test `honey warehouse update`
+        :return:
+        """
+        argv = ['warehouse', 'update', 'testGarage']
