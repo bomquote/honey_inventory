@@ -5,7 +5,7 @@ from honey import config_file
 from honey.core.database import extend_sqla
 from honey.core.exc import HoneyError
 from honey.controllers.base import Base
-from honey.controllers.inventory import WarehouseController
+from honey.controllers.warehouse import WarehouseController
 from honey.ext.redis import HoneyRedisCacheHandler
 
 
@@ -71,7 +71,7 @@ class HoneyTest(TestApp, Honey):
     """A sub-class of Honey that is better suited for testing."""
 
     class Meta:
-        label = 'honey'
+        # label = 'honeytest'
 
         config_defaults = TEST_CONFIG
         config_section = 'honeytest'

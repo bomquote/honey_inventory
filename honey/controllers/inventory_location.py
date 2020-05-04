@@ -5,13 +5,13 @@ from tabulate import tabulate
 import sys
 
 
-class WarehouseController(Controller):
+class InventoryLocationController(Controller):
     class Meta:
-        label = 'warehouse'
+        label = 'Invloc'  # InventoryLocation
         stacked_type = 'nested'
         stacked_on = 'base'
 
-    @ex(help='list warehouses')
+    @ex(help='list inventory locations')
     def list(self):
         """
         Render the warehouse table id's and names.

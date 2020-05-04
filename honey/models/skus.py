@@ -111,8 +111,9 @@ class SkuAttribute(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     representation. You can cast those to integers when needed for summation.
     todo: a better data structure for this might be a jsonb in postgres as
         it would eliminate redundant keys in the db for each owner_id. But
-        the owner_id reference column should make current structure speed
-        efficient and changing it likely nitpicking.
+        the owner_id reference column should make current structure very
+        speed efficient and changing it to eliminate a few potential redundant
+        keys is just nitpicking.
     """
     __tablename__ = 'sku_attrs'
     # key should be like "family", "class", "color", 'connector'

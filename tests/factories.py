@@ -45,4 +45,4 @@ class WarehouseFactory(BaseFactory):
         """Factory configuration."""
         model = Warehouse
 
-    name = 'Garage'
+    name = 'testGarage'

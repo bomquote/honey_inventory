@@ -1,9 +1,7 @@
 from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
-from sqlalchemy.ext.associationproxy import association_proxy
 from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, reference_col
-from cement.core.handler import Handler
 
 
 class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -22,12 +20,16 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
 class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
-    A location for a Sku. Right now I think of this as a unique name/number for
-    a Container which may hold multiple different SKUs. For example, we have mixed
-    boxes of retail packaged products and this will enable us to just put a label on
-    each box and call that label the "location". Then, I can populate a location
-    with SKUs and relate them in the Association object table. I'm sure this can be made
-    more complex in the future but it may be all we ever need now.
+    A location for a Sku. Right now I think of an InventoryLocation `label` as a
+    unique name/number per each warehouse, for a Container which may hold multiple
+    different SKUs. For example, we have mixed master carton boxes of retail packaged
+    products and this will enable us to just put a label on each top level master
+    carton box in a warehouse and call that label the "inventory location". Then,
+    inventory locations are identified by the label. We associate the inventory
+    location labels with SKUs in the Association object relation table,
+    `SkuLocationAssoc`. I'm sure this can be made more complex for some use cases
+    but it's already flexible and will cover the need for many use cases.
+    Add extra data in the SkuLocationAssoc class (must migrate if changed).
 
     NOTE for changes: this model is imported in alembic/env.py for migrations.
     """
@@ -59,11 +61,12 @@ class SkuLocationAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     An association object for Skus and Locations. The left side of the relationship
     maps a Sku as a one-to-many to InventoryLocations. This allows one SKU to have many
     InventoryLocations, offering significant flexibility when combined with the
-    ease of creating transient locatins. The association allows to add some extra data
-    like sku quantity in the location, and could potentially capture items like cost
+    ease of creating transient locations. The association allows to add some extra data
+    like sku quantity in the location, and can also capture items like cost
     and sales price here as well. Then, the association class maps a
-    many-to-one to the InventoryLocation. Finally, we can use hybrid relationships to
-    work with this table.
+    many-to-one to the InventoryLocation, so we can have mixed Skus in a single
+    InventoryLocation. Finally, we can use association_proxy to work with the
+    data in this table, as done in the models/skus.py file in the ProductSku class.
     """
     __tablename__ = 'sku_locations'
     # parent is ProductSku
