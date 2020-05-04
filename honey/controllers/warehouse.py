@@ -68,7 +68,7 @@ class WarehouseController(Controller):
         self.app.session.commit()
 
     @ex(
-        help='update a warehouse name to newname',
+        help='update a warehouse name to new name',
         arguments=[
             (['identifier'],
              {'help': 'warehouse database name or id',
@@ -89,7 +89,7 @@ class WarehouseController(Controller):
         """
         if self.app.pargs.identifier.isnumeric():
             wh_id = int(self.app.pargs.identifier)
-            wh_obj = Warehouse.get_by_id(wh_id)
+            wh_obj = self.app.session.query(Warehouse.id == wh_id).first()
         else:
             wh_obj = self.app.session.query(
                 Warehouse).filter_by(name=self.app.pargs.identifier).first()
