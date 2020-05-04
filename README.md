@@ -47,7 +47,7 @@ the filename will be called `honey.yml`
 - All configuration settings can be overridden by their associated environment variables. 
 For example config['honey']['foo'] is overridable by $HONEY_FOO.
 
-## Quickstart Installation
+## Quickstart Installation & Configuration
 
 1. git clone or fork this library and clone it to your local repository.
 
@@ -80,10 +80,10 @@ like `sqlalchemy.url = postgresql+psycopg2://postgres:password@localhost:5432/hg
     Then, run the `honey` command in your command prompt window.  For help, run `honey --help`.
 
 7. populate your database with some initial warehouse, container, and product/SKU data, like your barcode numbers and 
-SKU descriptions.  For example, we have about 50 different product SKUs for our HoneyGear.com products and all those SKUs 
+SKU descriptions.  For example, we have about 50 different product SKUs for our [HoneyGear.com](https://www.honeygear.com) products and all those SKUs 
 can be stored in various carton sizes, so the 50 SKUs in different carton sizes quickly become a few hundred different 
-inventoriable items. That top level descriptive data all needs to be entered intially for configuration before you can 
-do things like add specific quantities for your SKUs. So, we need to populate the following five tables with 
+items to inventory. That top level descriptive data all needs to be initially entered into the database for configuration before you can 
+do do work like add specific quantities for your SKUs. So, we need to populate the following five tables with 
 configuration data:
     - `warehouses` table
       - enter unique names to designate top level locations for places where goods are stored
@@ -105,6 +105,9 @@ configuration data:
       ![Image of product_skus tbl](https://github.com/bomquote/honey_inventory/blob/master/images/product_skus_tbl.png?raw=true)
 
 
+## Usage after initial database configuration
+
+Run `honey -h` or `honey --help` to see all the commands.  
 
 ## Development
 
