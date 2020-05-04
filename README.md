@@ -4,10 +4,25 @@
 
 ## About
 
-We needed a flexible inventory control database that can handle input from barcode scanning UPC codes and also 
-integrate with bomquote.com, so I built it. Honey Inventory is a command line driven app but it is also able 
-to be easily wrapped and used in a webapp or desktop application. Right now, it is opinionated to fit our use 
-case and depends on SQLAlchemy and a dockerized Redis for caching.
+Honey Inventory began out of a need for a flexible inventory control database for our  
+[honeygear.com](https://www.honeygear.com) products that can 
+handle input from barcode scanning UPC codes. Also, we wanted an inventory application which 
+can be locally used at different locations but still integrate and sync with our 
+[bomquote.com](https://www.bomquote.com) webapp, so I built it. Honey Inventory is a command line 
+driven app but it is also able to be easily wrapped and used in a webapp or desktop application. 
+Currently, it is opinionated to fit our use case and depends on a relational database which is compatible
+with SQLAlchemy and also Redis for caching. 
+
+## Primary Goals
+1. allows easy creation of transient or permanent storage locations that can contain multiple skus. This is a solution
+ for dealing with a scenerio like:
+   - "I just recalled 5000pcs of product from Amazon.com FBA covering 50 SKUs, and those pricks shipped 
+ them back to me in 200 different mixed sized cartons of jumbled up SKUs, and I think the counts are wrong."
+2. support barcode scanning to be able to quickly deal with a scenerio like:
+   - slap a label on the mixed carton Amazon sent you to call it a "inventory location", scan all the UPCs of the carton
+    contents to get a count of what's in the carton, throw them back in the carton so you don't have to deal with sorting 
+    them while still knowing for certain what's in the cartons. 
+3. generalize this to be a core inventory solution that integrates with python based webapps like bomquote.com 
 
 ## NOTE: UNDER ACTIVE DEVELOPMENT
 
