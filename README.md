@@ -21,7 +21,7 @@ with SQLAlchemy and also Redis for caching.
    - slap a label on the mixed carton Amazon sent you to call it a "inventory location", scan all the UPCs of the carton
     contents to get a count of what's in the carton, throw them back in the carton so you don't have to deal with sorting 
     them while still knowing for certain what's in the cartons. 
-3. generalize this to be a core inventory solution that integrates with python based webapps like bomquote.com 
+3. generalize this to be a core inventory solution backend for a desktop or web application like [bomquote.com](https://www.bomquote.com). 
 
 ## NOTE: UNDER ACTIVE DEVELOPMENT
 
