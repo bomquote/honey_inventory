@@ -1,3 +1,5 @@
+![Image of honey_logo](https://github.com/bomquote/honey_inventory/blob/master/images/honey_img.png?raw=true)
+
 # Honey Inventory: sweet command line inventory control
 
 ## About
@@ -31,6 +33,13 @@ the filename will be called `honey.yml`
 - All configuration settings can be overridden by their associated environment variables. 
 For example config['honey']['foo'] is overridable by $HONEY_FOO.
 
+## Database Migrations
+
+
+To get started, you need to:
+1. edit the 
+1. edit the `sqlalchemy.url` parameter in the alembic.ini file to ensure your database connection string is correct, 
+like `sqlalchemy.url = postgresql+psycopg2://postgres:password@localhost:5432/hgdb`
 
 ## Quickstart Installation
 
@@ -52,9 +61,15 @@ $ pip install e .
 
 If you are running miniconda, which I'm sure you are because this is 2020, then be sure to activate your environment.
 
-5. init your database tables with alembic migrations by running `........` 
+5. Honey Inventory uses Alembic for database schema migrations. This allows you to create new database tables or modify 
+existing tables. To brush up on Alembic see the 
+[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html). 
+To get started, you need to:
+- edit the `sqlalchemy.url` parameter in the alembic.ini file to ensure your database connection string is correct, 
+like `sqlalchemy.url = postgresql+psycopg2://postgres:password@localhost:5432/hgdb`
+- init your database for alembic migrations by running the alembic init command
 
-6. to run the application, navigate to the repo folder:
+6. after your database is initialized with the blank tables created, to run the application, navigate to the repo folder:
 
 ```cmd
 c:\Users\bjord\repos\honey_inventory>
@@ -73,7 +88,7 @@ configuration data:
   ![Image of warehouse tbl](https://github.com/bomquote/honey_inventory/blob/master/images/warehouses_tbl.png?raw=true)
 - `containers` table
   - list the kind of containers are your goods stored in and reference them to each other to describe parent-child relations. 
-  ![Image of containers tbl](https://github.com/bomquote/honey_inventory/blob/master/images/containers_tbl.png?raw=true)
+  ![Image of containers tbl](https://github.com/bomquote/honey_inventory/blob/master/images/container_tbl.png?raw=true)
 - `sku_owners` table
   - create an entry for each of the ultimate owners of the inventory/products in your database
   ![Image of sku_owners tbl](https://github.com/bomquote/honey_inventory/blob/master/images/sku_owners_tbl.png?raw=true)
@@ -87,13 +102,7 @@ configuration data:
   - enter in your detailed sku numbers, upc codes, descriptions, owner_id, and container_id
   ![Image of product_skus tbl](https://github.com/bomquote/honey_inventory/blob/master/images/product_skus_tbl.png?raw=true)
 
-## Database Migrations
 
-Honey Inventory uses Alembic for database schema migrations. To brush up on Alembic see the 
-[Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html).
-You need to:
-1. edit the `sqlalchemy.url` parameter in the alembic.ini file to ensure your database connection string is correct, 
-like `sqlalchemy.url = postgresql+psycopg2://postgres:password@localhost:5432/hgdb`
 
 ## Development
 
