@@ -56,7 +56,11 @@ class WarehouseController(Controller):
         arguments=[
             (['name'],
              {'help': 'honey warehouse create <name>',
-              'action': 'store'})
+              'action': 'store'}),
+            (['-i', '--owner_identifier'],
+             {'help': 'owner identifier (name or id)',
+              'action': 'store',
+              'dest': 'new_name'})
         ],
     )
     def create(self):

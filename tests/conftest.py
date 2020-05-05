@@ -9,7 +9,7 @@ from cement import fs
 from .factories import Session, engine
 from honey.honey import HoneyTest
 from honey.core.database import ModelBase
-from .factories import WarehouseFactory
+from .factories import WarehouseFactory, SkuOwnerFactory
 
 
 def test_app_extend_sqla(app):
@@ -73,8 +73,16 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def warehouse(db):
-    wh = WarehouseFactory()
+def sku_owner(db):
+    skuowner = SkuOwnerFactory()
+    db.add(skuowner)
+    db.commit()
+    yield skuowner
+
+
+@pytest.fixture(scope="function")
+def warehouse(db, sku_owner):
+    wh = WarehouseFactory(owner_id=sku_owner.id)
     db.add(wh)
     db.commit()
     yield wh

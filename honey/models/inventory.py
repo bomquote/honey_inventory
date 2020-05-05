@@ -1,21 +1,27 @@
 from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
-from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, reference_col
+from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, \
+    reference_col
 
 
 class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
-    A Warehouse is an InventoryLocation container.
+    A Warehouse is an InventoryLocation container. It can be owned by
+    a Sku_Owner.
     """
     __tablename__ = 'warehouses'
-    name = Column('name', Unicode(), unique=True)
+    __table_args__ = (UniqueConstraint('name', 'owner_id'),)
+    name = Column('name', Unicode())
+    owner_id = reference_col('sku_owners')
+    owner = relationship('SkuOwner', backref='warehouses')
 
-    def __init__(self, name):
+    def __init__(self, name, owner_id):
         self.name = name
+        self.owner_id = owner_id
 
     def __repr__(self):
-        return f'<Warehouse {self.name}>'
+        return f'<Warehouse name={self.name}, owner_id={self.owner_id}>'
 
 
 class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -40,8 +46,8 @@ class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     warehouse_id = reference_col('warehouses')
 
     warehouse = relationship("Warehouse", backref="inventory_locations",
-                                cascade="save-update, merge",
-                                single_parent=True)
+                             cascade="save-update, merge",
+                             single_parent=True)
 
     skus = relationship(
         "SkuLocationAssoc", back_populates="location",
@@ -91,9 +97,9 @@ class SkuLocationAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
     # parent
     sku = relationship("ProductSku", back_populates='locations',
-                          lazy="joined",
-                          foreign_keys=[sku_id],
-                          cascade="all, delete")
+                       lazy="joined",
+                       foreign_keys=[sku_id],
+                       cascade="all, delete")
 
     def __init__(self, sku_id, location_id, quantity):
         self.sku_id = sku_id
@@ -102,5 +108,3 @@ class SkuLocationAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
     def __repr__(self):
         return f'<SkuLocationAssoc {self.sku.sku, self.location.label}>'
-
-

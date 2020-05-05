@@ -20,7 +20,8 @@ class SkuOwner(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     __tablename__ = 'sku_owners'
     name = Column('name', Unicode(), nullable=False, unique=True)
     # backref: skus
-    # backeref: sku_groups
+    # backref: sku_groups
+    # backref: warehouses
 
     def __init__(self, name):
         self.name = name

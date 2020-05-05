@@ -36,6 +36,19 @@ class BaseFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = Session()
 
 
+class SkuOwnerFactory(BaseFactory):
+    """
+    Warehouse factory.
+    """
+
+    class Meta:
+        """Factory configuration."""
+        model = SkuOwner
+
+    name = 'honeygear'
+
+
+
 class WarehouseFactory(BaseFactory):
     """
     Warehouse factory.
