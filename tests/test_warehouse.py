@@ -14,12 +14,12 @@ class TestWarehouse:
             data, output = app.last_rendered
             assert 'testGarage' in output
 
-    def test_warehouse_create(self, HoneyApp, hooks, db, warehouse):
+    def test_warehouse_create(self, HoneyApp, hooks, db, warehouse, sku_owner):
         """
         Test `honey warehouse create`
         :return:
         """
-        argv = ['warehouse', 'create', 'testwh']
+        argv = ['warehouse', 'create', 'testwh', '-i', 'honeygear']
         with HoneyApp(argv=argv, hooks=hooks) as app:
             initial_count = app.session.query(Warehouse).count()
             app.run()

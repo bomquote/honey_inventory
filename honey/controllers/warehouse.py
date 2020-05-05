@@ -1,5 +1,6 @@
 from cement import Controller, ex
 from honey.models.inventory import Warehouse
+from honey.models.skus import SkuOwner
 from honey.core.exc import HoneyError
 from tabulate import tabulate
 import sys
@@ -60,16 +61,27 @@ class WarehouseController(Controller):
             (['-i', '--owner_identifier'],
              {'help': 'owner identifier (name or id)',
               'action': 'store',
-              'dest': 'new_name'})
+              'dest': 'owner_id'})
         ],
     )
     def create(self):
         name = self.app.pargs.name
-        # now = strftime("%Y-%m-%d %H:%M:%S")
-        self.app.log.info(f'creating new warehouse: {name}')
-        new_warehouse = Warehouse(name=name)
-        self.app.session.add(new_warehouse)
-        self.app.session.commit()
+        identifier = self.app.pargs.owner_id
+        if identifier and identifier.isnumeric():
+            owner_obj = self.app.session.query(SkuOwner,
+                                               SkuOwner.id == identifier).first()
+        else:
+            owner_obj = self.app.session.query(SkuOwner,
+                                               SkuOwner.name == identifier).first()
+        if owner_obj[0]:
+            self.app.log.info(f'creating new warehouse: name={name}, '
+                              f'owner={owner_obj[0].name}')
+            new_warehouse = Warehouse(name=name, owner_id=owner_obj[0].id)
+
+            self.app.session.add(new_warehouse)
+            self.app.session.commit()
+        else:
+            raise HoneyError('provide a warehouse owner identifier with the -i or --owner_identifier flag')
 
     @ex(
         help='update a warehouse name to new name',
