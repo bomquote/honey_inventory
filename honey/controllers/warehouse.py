@@ -59,7 +59,7 @@ class WarehouseController(Controller):
              {'help': 'honey warehouse create <name>',
               'action': 'store'}),
             (['-i', '--owner_identifier'],
-             {'help': 'owner identifier (name or id)',
+             {'help': 'owner identifier (a name or id)',
               'action': 'store',
               'dest': 'owner_id'})
         ],
@@ -68,20 +68,21 @@ class WarehouseController(Controller):
         name = self.app.pargs.name
         identifier = self.app.pargs.owner_id
         if identifier and identifier.isnumeric():
-            owner_obj = self.app.session.query(SkuOwner,
-                                               SkuOwner.id == identifier).first()
+            owner_obj = self.app.session.query(SkuOwner).filter(
+                SkuOwner.id == identifier).first()
         else:
-            owner_obj = self.app.session.query(SkuOwner,
-                                               SkuOwner.name == identifier).first()
-        if owner_obj[0]:
+            owner_obj = self.app.session.query(SkuOwner).filter(
+                SkuOwner.name == identifier).first()
+        if owner_obj:
             self.app.log.info(f'creating new warehouse: name={name}, '
-                              f'owner={owner_obj[0].name}')
-            new_warehouse = Warehouse(name=name, owner_id=owner_obj[0].id)
+                              f'owner={owner_obj.name}')
+            new_warehouse = Warehouse(name=name, owner_id=owner_obj.id)
 
             self.app.session.add(new_warehouse)
             self.app.session.commit()
         else:
-            raise HoneyError('provide a warehouse owner identifier with the -i or --owner_identifier flag')
+            raise HoneyError(
+                'provide a warehouse owner with the -i or --owner_identifier flag')
 
     @ex(
         help='update a warehouse name to new name',
