@@ -4,7 +4,6 @@ PyTest Fixtures.
 
 import pytest
 import pathlib
-import yaml
 from cement import fs
 from .factories import Session, engine
 from honey.honey import HoneyTest
@@ -34,6 +33,7 @@ def test_app_extend_sqla(app):
 test_app_hooks = [
     ('post_setup', test_app_extend_sqla),
 ]
+
 
 @pytest.fixture(scope="function")
 def hooks():

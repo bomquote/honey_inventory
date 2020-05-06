@@ -15,7 +15,8 @@ def db():
 
 
 @db.command()
-@click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
+@click.option("--identifier", prompt="Revision identifier", default='head',
+              help="The revision identifier to target.")
 def upgrade(identifier):
     """Migrate the db up to the new version. This supports partial revision identifiers
     and relative migration identifiers.
@@ -27,7 +28,8 @@ def upgrade(identifier):
     alembic_config.main(argv=['upgrade', f'{identifier}'])
 
 @db.command()
-@click.option("--identifier", prompt="Revision identifier", default='', help="The revision identifier to target.")
+@click.option("--identifier", prompt="Revision identifier", default='',
+              help="The revision identifier to target.")
 def downgrade(identifier):
     """Migrate the db to a previous version or all the way back to base, using 'base' as
     the revision identifier. This supports partial revision identifiers and relative
@@ -60,7 +62,8 @@ def revision(message, autogenerate):
 
 
 @db.command()
-@click.option("--verbose", prompt="Use Verbose?", default="True", help="Return a verbose info response?")
+@click.option("--verbose", prompt="Use Verbose?", default="True",
+              help="Return a verbose info response?")
 def current(verbose):
     """Get information about the state of the current revision."""
     os.chdir(repo)
@@ -71,7 +74,8 @@ def current(verbose):
 
 
 @db.command()
-@click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
+@click.option("--identifier", prompt="Revision identifier", default='head',
+              help="The revision identifier to target.")
 def show(identifier):
     """Show the revision(s) denoted by the given symbol. This supports partial revision
     identifiers and relative migration identifiers.
@@ -83,7 +87,8 @@ def show(identifier):
 
 
 @db.command()
-@click.option("--verbose", prompt="Use Verbose?", default="False", help="Return a verbose info response?")
+@click.option("--verbose", prompt="Use Verbose?", default="False",
+              help="Return a verbose info response?")
 def heads(verbose):
     """Show current available heads in the script directory.
     see:
@@ -97,7 +102,8 @@ def heads(verbose):
 
 
 @db.command()
-@click.option("--identifier", prompt="Revision identifier", default='head', help="The revision identifier to target.")
+@click.option("--identifier", prompt="Revision identifier", default='head',
+              help="The revision identifier to target.")
 def stamp(identifier):
     """ ‘stamp’ the revision table with the given revision; don’t run any migrations.
     see:
@@ -108,7 +114,8 @@ def stamp(identifier):
 
 
 @db.command()
-@click.option("--verbose", prompt="Use Verbose?", default="True", help="Return a verbose info response?")
+@click.option("--verbose", prompt="Use Verbose?", default="True",
+              help="Return a verbose info response?")
 @click.option("--history_range", prompt="Input a history range?", default="False",
               help="accepts an argument [start]:[end]")
 def history(verbose, history_range):

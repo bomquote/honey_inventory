@@ -9,15 +9,21 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from factory import PostGenerationMethodCall, Sequence
 from factory.alchemy import SQLAlchemyModelFactory
 from honey.core.database import time_utcnow
+from honey.honey import path_matcher, path_constructor
 from honey.models.inventory import (Warehouse, InventoryLocation, SkuLocationAssoc)
 from honey.models.skus import SkuOwner, Container, ProductSku, SkuAttribute
+
+yaml.add_implicit_resolver('!path', path_matcher)
+yaml.add_constructor('!path', path_constructor)
 
 config_dir = pathlib.Path.cwd().parent / 'config'
 config_file = config_dir / 'honey.yml'
 # parse YAML config file
 
-with open(config_file) as stream:
-    config_data = yaml.safe_load(stream)
+
+with open(config_file, 'r') as stream:
+    config_data = yaml.load(stream, Loader=yaml.FullLoader)
+
 
 conn = config_data['honeytest']['DB_CONNECTION']
 

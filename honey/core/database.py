@@ -71,9 +71,12 @@ def time_utcnow():
 class CRUDMixin:
     """Mixin that adds convenience methods for CRUD (create, read, update,
     delete) operations.  Using these methods makes it harder to test within
-    the scope of the Cement framework, as the testdb is hard to access on the
+    the scope of the Cement framework, as the test db is hard to access on the
     correct session object. So, minimize the use of these methods and just
-    use the vanilla sqlalchemy pattern of db.session.add and db.session.commit."""
+    use the vanilla sqlalchemy pattern of db.session.add and db.session.commit.
+    todo: remove this mixin from the library to maintain consistent sqlalchemy style,
+        as anyway this is flask-sqlalchemy style, atm it is used in the click scripts
+    """
 
     @classmethod
     def create(cls, commit=True, **kwargs):

@@ -35,9 +35,16 @@ honey:
 honeytest:
 
   DB_CONNECTION: 'postgresql+psycopg2://postgres:password@localhost:5432/hgdbtest'
+
   WAREHOUSE_CACHE_KEY: 'honeytest-active-warehouse'
 
+cache.redis:
 
+  PASSWORD: ${REDIS_PASSWORD}  # set a `REDIS_PASSWORD` environment variable
+  HOST: 127.0.0.1
+  PORT: 6379
+  DB: 0
+  EXPIRE_TIME: 0
 
 log.colorlog:
 
