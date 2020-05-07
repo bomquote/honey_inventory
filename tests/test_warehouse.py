@@ -1,6 +1,6 @@
-from cement.core.extension import ExtensionInterface, ExtensionHandler
+
 from honey.models.inventory import Warehouse
-from .factories import config_data
+
 
 class TestWarehouse:
     """Warehouse tests."""
@@ -58,20 +58,31 @@ class TestWarehouse:
             assert 'testGarage' not in [
                 wh.name for wh in app.session.query(Warehouse).all()]
 
-    def test_warehouse_activate(self, HoneyApp, hooks, db, warehouse, sku_owner):
+    def test_warehouse_activate(self, HoneyApp, hooks, db, warehouse):
         """
         Test `honey warehouse activate`
         :return:
         """
         argv = ['warehouse', 'activate', 'testGarage']
         with HoneyApp(argv=argv, hooks=hooks) as app:
-
-            # print(f'key -> {app.config.get("cache.redis", "PASSWORD")}')
-            # the cache key is not set in redis
-            # assert wh_cache_key is None
             wh_cache_key = app.config.get("honeytest", "WAREHOUSE_CACHE_KEY")
             assert app.cache.get(wh_cache_key) is None
             app.run()
             # the cache key is set in redis
-            print(f'cache -> {app.cache.get(wh_cache_key)}')
             assert 'testGarage' in app.cache.get(wh_cache_key)
+            # teardown
+            app.cache.delete(wh_cache_key)
+
+    def test_warehouse_deactivate(self, HoneyApp, hooks, db, warehouse):
+        """
+        Test `honey warehouse deactivate`
+        :return:
+        """
+        argv = ['warehouse', 'deactivate']
+        with HoneyApp(argv=argv, hooks=hooks) as app:
+            wh_cache_key = app.config.get("honeytest", "WAREHOUSE_CACHE_KEY")
+            app.cache.set(wh_cache_key, 'testGarage')
+            assert 'testGarage' in app.cache.get(wh_cache_key)
+            app.run()
+            # the cache key is unset in redis
+            assert app.cache.get(wh_cache_key) is None

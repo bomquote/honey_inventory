@@ -187,6 +187,8 @@ class WarehouseController(Controller):
     )
     def deactivate(self):
         wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
+        if self.app.__test__:
+            wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
         active_warehouse = self.app.cache.get(wh_cache_key)
         if active_warehouse:
             self.app.log.info(f"Deactivated warehouse '{active_warehouse}'.")

@@ -14,18 +14,7 @@ from .factories import WarehouseFactory, SkuOwnerFactory
 def test_app_extend_sqla(app):
     """
     hook for cement framework to extend and have self.app.session
-    for now, I'm just importing session from here throughout the app
     """
-    # app.log.info('extending Honey application with sqlalchemy')
-    # db_connection = app.config.get('honey', 'db_connection')
-    # app.log.info(f'the db_connection string is : {db_connection}')
-    # 'postgresql+psycopg2://postgres:password@localhost:5432/hgdb'
-    # create an engine
-    # engine = create_engine(db_connection)
-    # create a configured "Session" class
-    # Session = sessionmaker(bind=engine)
-    # create a Session
-    # session = Session()
     session = Session()
     app.extend('session', session)
 
@@ -48,7 +37,9 @@ def template_path():
 
 @pytest.fixture(scope="function")
 def HoneyApp():
-    """Need to use this like `with HoneyTest(argv=argv, hooks=hooks):`"""
+    """
+    Need to use this like `with HoneyTest(argv=argv, hooks=hooks):`
+    """
     HoneyTest.__test__ = True
     yield HoneyTest
 

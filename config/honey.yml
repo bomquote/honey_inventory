@@ -40,7 +40,8 @@ honeytest:
 
 cache.redis:
 
-  PASSWORD: ${REDIS_PASSWORD}  # set a `REDIS_PASSWORD` environment variable
+  USE_PASSWORD: True  # bool, True or False, whether or not to use a redis password
+  PASSWORD: ${REDIS_PASSWORD}  # if TRUE, set a `REDIS_PASSWORD` environment variable
   HOST: 127.0.0.1
   PORT: 6379
   DB: 0
