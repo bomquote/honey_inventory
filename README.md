@@ -1,16 +1,16 @@
 ![Image of honey_logo](https://github.com/bomquote/honey_inventory/blob/master/images/honey_img.png?raw=true)
 
-# Honey Inventory: sweet command line inventory control
+# Honey Inventory: sweet command line inventory control that supports scanning barcode labeled items
 
 ## About
 
 Honey Inventory began out of a need for a flexible inventory control database for our [honeygear.com](https://www.honeygear.com) products that can 
 handle input from barcode scanning UPC codes. Also, we wanted an inventory application which 
-can be locally used at different locations but still integrate and sync with our 
+can be used on a small laptop at remote locations but still integrate and sync with our 
 [bomquote.com](https://www.bomquote.com) webapp, so I built it. Honey Inventory is a command line 
-driven app but it is also able to be easily wrapped and used in a webapp or desktop application. 
-Currently, it is opinionated to fit our use case and depends on a relational database which is compatible
-with SQLAlchemy and also Redis for caching. 
+driven app but it is in essence a full fledged backend inventory system which is also able to be easily 
+wrapped and integrated into a webapp or desktop application. It requires a relational database 
+like postgresql or mysql which is compatible with SQLAlchemy (most of them) and also depends on Redis for caching. 
 
 ## Primary Goals
 1. allows easy creation of transient or permanent storage locations that can contain multiple skus. This is a solution
