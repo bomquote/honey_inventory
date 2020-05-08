@@ -81,7 +81,7 @@ class WarehouseController(Controller):
             self.app.session.commit()
         else:
             raise HoneyError(
-                'provide a warehouse owner with the -i or --owner_identifier flag')
+                'provide a warehouse owner with the -e or --entity_identifier flag')
 
     @ex(
         help='update a warehouse name to new name',
@@ -163,9 +163,11 @@ class WarehouseController(Controller):
         multiple consecutive commands in working within the same warehouse.
         """
         identifier = self.app.pargs.identifier
-        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
-        if self.app.__test__:
-            wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
+        try:
+            if self.app.__test__:
+                wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
+        except AttributeError:
+            wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
         if identifier.isnumeric():
             id = int(identifier)
             wh_obj = self.app.session.query(Warehouse).filter_by(id=id).first()
@@ -185,9 +187,11 @@ class WarehouseController(Controller):
         help='clear active warehouse'
     )
     def deactivate(self):
-        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
-        if self.app.__test__:
-            wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
+        try:
+            if self.app.__test__:
+                wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
+        except AttributeError:
+            wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
         active_warehouse = self.app.cache.get(wh_cache_key)
         if active_warehouse:
             self.app.log.info(f"Deactivated warehouse '{active_warehouse}'.")
