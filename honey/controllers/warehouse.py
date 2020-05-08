@@ -1,6 +1,6 @@
 from cement import Controller, ex
 from honey.models.inventory import Warehouse
-from honey.models.skus import SkuOwner
+from honey.models.entities import Entity
 from honey.core.exc import HoneyError
 from tabulate import tabulate
 import sys
@@ -30,7 +30,7 @@ class WarehouseController(Controller):
         """
         warehouses = self.app.session.query(Warehouse).all()
         # for tabulate
-        headers = [['#', 'id', 'name']]
+        headers = ['#', 'id', 'name']
         data = []
         count = 0
         for record in warehouses:
@@ -46,10 +46,9 @@ class WarehouseController(Controller):
             # for easy testing we need to use the render method but that would
             # make us have to create a template, if we do that, what good is tabulate?
             if self.app.__test__:
-                headers = headers[0]
                 self.app.render(data, headers=headers, tablefmt="grid")
         except AttributeError:
-            sys.stdout.write(tabulate(data, headers="firstrow", tablefmt="grid"))
+            sys.stdout.write(tabulate(data, headers=headers, tablefmt="grid"))
 
 
     @ex(
@@ -58,25 +57,25 @@ class WarehouseController(Controller):
             (['name'],
              {'help': 'honey warehouse create <name>',
               'action': 'store'}),
-            (['-i', '--owner_identifier'],
-             {'help': 'owner identifier (a name or id)',
+            (['-e', '--entity_identifier'],
+             {'help': 'entity owner identifier (an entity_name or entity_id)',
               'action': 'store',
-              'dest': 'owner_id'})
+              'dest': 'entity_id'})
         ],
     )
     def create(self):
         name = self.app.pargs.name
-        identifier = self.app.pargs.owner_id
+        identifier = self.app.pargs.entity_id
         if identifier and identifier.isnumeric():
-            owner_obj = self.app.session.query(SkuOwner).filter(
-                SkuOwner.id == identifier).first()
+            owner_obj = self.app.session.query(Entity).filter(
+                Entity.id == identifier).first()
         else:
-            owner_obj = self.app.session.query(SkuOwner).filter(
-                SkuOwner.name == identifier).first()
+            owner_obj = self.app.session.query(Entity).filter(
+                Entity.name == identifier).first()
         if owner_obj:
             self.app.log.info(f'creating new warehouse: name={name}, '
                               f'owner={owner_obj.name}')
-            new_warehouse = Warehouse(name=name, owner_id=owner_obj.id)
+            new_warehouse = Warehouse(name=name, entity_id=owner_obj.id)
 
             self.app.session.add(new_warehouse)
             self.app.session.commit()

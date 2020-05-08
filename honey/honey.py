@@ -7,7 +7,9 @@ from honey import config_file
 from honey.core.database import extend_sqla
 from honey.core.exc import HoneyError
 from honey.controllers.base import Base
+from honey.controllers.entity import EntityController
 from honey.controllers.warehouse import WarehouseController
+from honey.controllers.inventory_location import InventoryLocationController
 from honey.ext.redis import HoneyRedisCacheHandler
 
 # match on ${ env variable } in the yaml file
@@ -74,7 +76,9 @@ class Honey(App):
         # bob: if register handlers in honey.bootstrap, don't need to register here
         handlers = [
             Base,
-            WarehouseController
+            EntityController,
+            WarehouseController,
+            InventoryLocationController
         ]
 
         hooks = [

@@ -14,22 +14,6 @@ productsku_skuattr_assoc = Table(
 )
 
 
-class SkuOwner(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
-    """A table designating ultimate owners of product SKUs. Equivalent to
-    customer or account name. Parent -> SkuOwner, Child -> ProductSku. """
-    __tablename__ = 'sku_owners'
-    name = Column('name', Unicode(), nullable=False, unique=True)
-    # backref: skus
-    # backref: sku_groups
-    # backref: warehouses
-
-    def __init__(self, name):
-        self.name = name
-
-    def __repr__(self):
-        return f'<SkuOwner {self.name}>'
-
-
 class Container(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A table to hold the various ProductSku containers. It has a self-referential
@@ -45,6 +29,7 @@ class Container(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     # self-referential id
     parent_id = reference_col('containers')
     parent = relationship('Container', remote_side='Container.id', backref='children')
+    # backref: skus
 
     def __init__(self, name, description, parent_id):
         self.name = name
@@ -62,14 +47,14 @@ class ProductSku(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     NOTE for changes: this model is imported in alembic/env.py for migrations.
     """
     __tablename__ = 'product_skus'
-    __table_args__ = (UniqueConstraint('sku', 'owner_id'),)
+    __table_args__ = (UniqueConstraint('sku', 'entity_id'),)
     # skus should be unique in combination with owner_id
     sku = Column('sku', Unicode(), nullable=False)
     upc = Column('upc', Unicode(), unique=True)
     description = Column('description', UnicodeText())
 
-    owner_id = reference_col('sku_owners')
-    owner = relationship('SkuOwner', backref='skus')
+    entity_id = reference_col('entities')
+    entity = relationship('Entity', backref='skus')
     container_id = reference_col('containers')
     container = relationship('Container', backref='skus')
 
@@ -90,15 +75,15 @@ class ProductSku(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     locations = relationship("SkuLocationAssoc", back_populates="sku",
                  lazy="selectin", passive_deletes=True)
 
-    def __init__(self, sku, upc, description, owner_id, container_id):
+    def __init__(self, sku, upc, description, entity_id, container_id):
         self.sku = sku
         self.description = description
         self.upc = upc
-        self.owner_id = owner_id
+        self.entity_id = entity_id
         self.container_id = container_id
 
     def __repr__(self):
-        return f'<ProductSku {self.sku, self.owner}>'
+        return f'<ProductSku {self.sku, self.entity}>'
 
 
 class SkuAttribute(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -122,15 +107,15 @@ class SkuAttribute(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     # value should be the value for the key, like 'family':'Grapple', 'class':'Pro',
     # 'color':'white', 'connector':'Micro-USB'
     value = Column('value', Unicode())
-    owner_id = reference_col('sku_owners')
-    owner = relationship('SkuOwner', backref='sku_attrs')
+    entity_id = reference_col('entities')
+    entity = relationship('Entity', backref='sku_attrs')
 
     # backref: skus
 
-    def __init__(self, key, value, owner_id):
+    def __init__(self, key, value, entity_id):
         self.key = key
         self.value = value
-        self.owner_id = owner_id
+        self.entity_id = entity_id
 
     def __repr__(self):
         return f'<SkuAttribute {self.key}={self.value}>'

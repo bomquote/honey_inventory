@@ -1,27 +1,31 @@
 from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
-from honey.core.database import ModelBase, CRUDMixin, SurrogatePK, AuditMixin, \
-    reference_col
+from honey.core.database import (ModelBase, CRUDMixin, SurrogatePK, AuditMixin,
+                                 reference_col)
 
 
 class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
     A Warehouse is an InventoryLocation container. It can be owned by
-    a Sku_Owner.
+    a WarehouseOwner. In reality, a warehouse may be a truck trailer, garage,
+    retail location, storage shed, room in a house, or any other place that
+    can physically contain an InventoryLocation.
     """
     __tablename__ = 'warehouses'
-    __table_args__ = (UniqueConstraint('name', 'owner_id'),)
+    __table_args__ = (UniqueConstraint('name', 'entity_id'),)
     name = Column('name', Unicode())
-    owner_id = reference_col('sku_owners')
-    owner = relationship('SkuOwner', backref='warehouses')
+    entity_id = reference_col('entities')
+    entity = relationship('Entity', backref='warehouses')
 
-    def __init__(self, name, owner_id):
+    # backref: locations
+
+    def __init__(self, name, entity_id):
         self.name = name
-        self.owner_id = owner_id
+        self.entity_id = entity_id
 
     def __repr__(self):
-        return f'<Warehouse name={self.name}, owner_id={self.owner_id}>'
+        return f'<Warehouse name={self.name}, entity={self.entity_id}>'
 
 
 class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -45,7 +49,7 @@ class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     label = Column('label', Unicode(), nullable=False)
     warehouse_id = reference_col('warehouses')
 
-    warehouse = relationship("Warehouse", backref="inventory_locations",
+    warehouse = relationship("Warehouse", backref="locations",
                              cascade="save-update, merge",
                              single_parent=True)
 

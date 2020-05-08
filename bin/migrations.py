@@ -1,5 +1,5 @@
 """
-This module is the entrypoint for alembic migrations
+This module is the entry point for alembic migrations
 """
 
 import click

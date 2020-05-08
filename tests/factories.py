@@ -1,7 +1,6 @@
 """
 Create model factories for the tests
 """
-import factory
 import pathlib
 import yaml
 from sqlalchemy import create_engine
@@ -11,7 +10,7 @@ from factory.alchemy import SQLAlchemyModelFactory
 from honey.core.database import time_utcnow
 from honey.honey import path_matcher, path_constructor
 from honey.models.inventory import (Warehouse, InventoryLocation, SkuLocationAssoc)
-from honey.models.skus import SkuOwner, Container, ProductSku, SkuAttribute
+from honey.models.entities import Entity
 
 yaml.add_implicit_resolver('!path', path_matcher)
 yaml.add_constructor('!path', path_constructor)
@@ -42,14 +41,14 @@ class BaseFactory(SQLAlchemyModelFactory):
         sqlalchemy_session = Session()
 
 
-class SkuOwnerFactory(BaseFactory):
+class EntityFactory(BaseFactory):
     """
     Warehouse factory.
     """
 
     class Meta:
         """Factory configuration."""
-        model = SkuOwner
+        model = Entity
 
     name = 'honeygear'
 

@@ -69,7 +69,7 @@ existing tables. To brush up on Alembic see the
   To get started, you need to:
     - edit the `sqlalchemy.url` parameter in the alembic.ini file to ensure your database connection string is correct, 
 like `sqlalchemy.url = postgresql+psycopg2://postgres:password@localhost:5432/hgdb`
-    - init your database for alembic migrations by running the alembic init command
+    - open a command prompt in your top-level project folder, then init your database migrations by running the `alembic init` command
 
 6. after your database is initialized with the blank tables created, to run the application, navigate to the repo folder:
 

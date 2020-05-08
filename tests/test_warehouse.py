@@ -21,7 +21,7 @@ class TestWarehouse:
         Test `honey warehouse create`
         :return:
         """
-        argv = ['warehouse', 'create', 'testwh', '-i', 'honeygear']
+        argv = ['warehouse', 'create', 'testwh', '-e', 'honeygear']
         with HoneyApp(argv=argv, hooks=hooks) as app:
             initial_count = app.session.query(Warehouse).count()
             app.run()
@@ -41,14 +41,14 @@ class TestWarehouse:
             assert 'testKitchen' in [
                 wh.name for wh in app.session.query(Warehouse).all()]
 
-    def test_warehouse_delete(self, HoneyApp, hooks, db, warehouse, sku_owner):
+    def test_warehouse_delete(self, HoneyApp, hooks, db, warehouse, entity):
         """
         Test `honey warehouse delete`
         :return:
         """
         argv = ['warehouse', 'delete', 'testGarage']
         with HoneyApp(argv=argv, hooks=hooks) as app:
-            new_warehouse = Warehouse(name="testKitchen", owner_id=sku_owner.id)
+            new_warehouse = Warehouse(name="testKitchen", entity_id=entity.id)
             app.session.add(new_warehouse)
             app.session.commit()
             initial_count = app.session.query(Warehouse).count()
