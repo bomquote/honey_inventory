@@ -1,7 +1,7 @@
 import click
 import os
 from honey.models.skus import ProductSku
-from honey.models import (Warehouse, InventoryLocation, SkuLocationAssoc, SkuOwner,
+from honey.models import (Warehouse, InventoryLocation, SkuLocationAssoc, Entity,
                         Container, ProductSku, SkuAttribute)
 
 from honey.core.database import session
@@ -37,7 +37,9 @@ def delete_warehouse(name):
 @click.option("--label", prompt="Enter a name for the inventory location label",
               default="Required", help="Create a location label.")
 def create_location(warehouse, label):
-    """Create a location, where location is a labeled container holding inventory."""
+    """
+    Create a location, where location is a labeled container holding inventory.
+    """
     if label == 'Required':
         return print("You must provide a new location label.")
     wh = session.query(Warehouse).filter_by(name=warehouse).first()

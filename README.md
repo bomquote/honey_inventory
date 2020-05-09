@@ -104,7 +104,109 @@ configuration data:
       - enter in your detailed sku numbers, upc codes, descriptions, owner_id, and container_id
       ![Image of product_skus tbl](https://github.com/bomquote/honey_inventory/blob/master/images/product_skus_tbl.png?raw=true)
 
-
+8. Associate your `sku_attributes` table records from the `SkuAttribute` class with the relevant `product_skus` table records from the `ProductSku` class.
+    - For example, I need to associate `family: Grapple` to all of our Grapple Grip Skus, which have Sku codes that start with the letter 'A'
+   ```python
+   from honey.core.database import session
+   from honey.models.skus import SkuAttribute, ProductSku
+   
+   for sku in session.query(ProductSku).filter(ProductSku.sku.like('A%')).all():
+        print(sku)
+   ```
+   returns...
+   ```python
+    <ProductSku ('A1-B-L', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-L', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-T', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-T', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-M', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-M', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-L-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-L-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-T-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-T-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-M-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-M-BX', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-L-IC', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-L-IC', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-T-IC', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-T-IC', <Entity HoneyGear>)>
+    <ProductSku ('A1-B-M-IC', <Entity HoneyGear>)>
+    <ProductSku ('A1-W-M-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-L', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-L', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-T', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-T', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-M', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-M', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-L-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-L-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-T-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-T-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-M-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-M-BX', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-L-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-L-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-T-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-T-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-B-M-IC', <Entity HoneyGear>)>
+    <ProductSku ('A2-W-M-IC', <Entity HoneyGear>)>
+    ````
+   All of these Sku's are "Grapple" family products. Then, in a python console, do similar to this for all the relevant sku attributes which you've defined:
+   ```python
+   # attributes which I loaded into the sku_attribute table during initial configuraton
+   class_grip = session.query(SkuAttribute).filter_by(value='Grip').first()
+   class_pro = session.query(SkuAttribute).filter_by(value='Pro').first()
+   color_white = session.query(SkuAttribute).filter_by(value='white').first()
+   color_black = session.query(SkuAttribute).filter_by(value='black').first()
+   connector_usbc = session.query(SkuAttribute).filter_by(value='usb-c').first()
+   connector_iphone = session.query(SkuAttribute).filter_by(value='iPhone').first()
+   connector_micro = session.query(SkuAttribute).filter_by(value='micro-usb').first()
+   family_flux = session.query(SkuAttribute).filter_by(value='Flux-Field').first()
+   family_gforce = session.query(SkuAttribute).filter_by(value='G-Force').first()
+   family_grapple = session.query(SkuAttribute).filter_by(value='Grapple').first()
+   family_tract = session.query(SkuAttribute).filter_by(value='Tract').first()
+   
+   # these queries capture our major HoneyGear sku families, which I loaded into the product_skus table during initial configuration
+   grapple_skus = session.query(ProductSku).filter(ProductSku.sku.like('A%')).all()
+   gforce_skus = session.query(ProductSku).filter(ProductSku.sku.like('B%')).all()
+   ffield_skus = session.query(ProductSku).filter(ProductSku.sku.like('C%')).all()
+   tract_skus = session.query(ProductSku).filter(ProductSku.sku.like('D%')).all()
+   
+   # skus which need associated with the "Grip" attribute
+   grapple_grip_skus = session.query(ProductSku).filter(ProductSku.sku.like('A1-%')).all()
+   gforce_grip_skus = session.query(ProductSku).filter(ProductSku.sku.like('B1-%')).all()
+   ffield_grip_skus = session.query(ProductSku).filter(ProductSku.sku.like('C1-%')).all()
+   
+   # skus which need associated with the "Pro" attribute
+   grapple_pro_skus = session.query(ProductSku).filter(ProductSku.sku.like('A2-%')).all()
+   gforce_pro_skus = session.query(ProductSku).filter(ProductSku.sku.like('B2-%')).all()
+   ffield_pro_skus = session.query(ProductSku).filter(ProductSku.sku.like('C2-%')).all()
+   
+   # white color and black color skus
+   white_skus = session.query(ProductSku).filter(ProductSku.sku.like('%-W-%')).all()
+   black_skus = session.query(ProductSku).filter(ProductSku.sku.like('%-B-%')).all()
+   
+   # find the skus with different cable types
+   micro_skus = session.query(ProductSku).filter(ProductSku.sku.like('%-M%')).all()
+   iphone_skus = session.query(ProductSku).filter(ProductSku.sku.like('%-L%')).all()
+   usbc_skus = session.query(ProductSku).filter(ProductSku.sku.like('%-T%')).all()
+   
+   # now, you just have to associate your sku_attributes to your product_skus, here is one example
+   for sku in grapple_skus:
+       sku.sku_attrs.append(family_grapple)
+   session.commit()
+   ```
+   After this initial sku attribute setup is completed, we can then easily access the attributes for any sku as follows:
+   ```python
+    a1_w_l = session.query(ProductSku).filter_by(sku='A1-W-L').first()
+    a1_w_l.sku_attrs
+    [<SkuAttribute class=Grip>, <SkuAttribute family=Grapple>, <SkuAttribute connector=iPhone>, <SkuAttribute color=white>]
+    [(attr.key, attr.value) for attr in a1_w_l.sku_attrs ]
+    [('class', 'Grip'), ('family', 'Grapple'), ('connector', 'iPhone'), ('color', 'white')]
+    ``` 
+   todo: make this setup easier by integrating attribute association into the command-line framework
+   
 ## Usage after initial database configuration
 
 Run `honey -h` or `honey --help` to see all the commands.  
