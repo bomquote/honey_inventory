@@ -30,12 +30,12 @@ class WarehouseController(Controller):
         """
         warehouses = self.app.session.query(Warehouse).all()
         # for tabulate
-        headers = ['#', 'id', 'name']
+        headers = ['#', 'id', 'name', 'warehouse owner']
         data = []
         count = 0
         for record in warehouses:
             count += 1
-            data.append([count, record.id, record.name])
+            data.append([count, record.id, record.name, record.entity.name])
         # it appears we need this try block for easiest testing of tabulate data
         # this is mainly because the output_handler = 'jinja2' in the main Honey app
         # while, we want to use tabulate as the output handler in many cases

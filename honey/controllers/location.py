@@ -1,4 +1,5 @@
 from cement import Controller, ex
+from honey.core.database import session
 from honey.models.inventory import Warehouse, InventoryLocation
 from honey.models.entities import Entity
 from honey.core.exc import HoneyError
@@ -56,7 +57,7 @@ class InventoryLocationController(Controller):
         help='Create an inventory location at a warehouse',
         arguments=[
             (['label'],
-             {'help': 'honey invloc create <name>',
+             {'help': 'honey invloc create <name> -wh <warehouse>',
               'action': 'store'}),
             (['-wh', '--warehouse'],
              {'help': 'warehouse identifier (a name or id)',
@@ -66,50 +67,38 @@ class InventoryLocationController(Controller):
     )
     def create(self):
         """
-        Create a location, where location is a labeled container holding inventory.
+        Create a location, where location is a labeled container holding inventory
+        at a named Warehouse.
         """
-        name = self.app.pargs.name
-        identifier = self.app.pargs.wh_id
-        if identifier and identifier.isnumeric():
-            owner_obj = self.app.session.query(Entity).filter(
-                Entity.id == identifier).first()
+        label = self.app.pargs.label
+        if not label:
+            raise HoneyError('you must provide an inventory location label')
+        wh_identifier = self.app.pargs.wh_id
+        if wh_identifier and wh_identifier.isnumeric():
+            wh_obj = self.app.session.query(Warehouse).filter(
+                Warehouse.id == wh_identifier).first()
         else:
-            owner_obj = self.app.session.query(Entity).filter(
-                Entity.name == identifier).first()
-        if owner_obj:
-            self.app.log.info(f'creating new warehouse: name={name}, '
-                              f'owner={owner_obj.name}')
-            new_warehouse = Warehouse(name=name, owner_id=owner_obj.id)
-
-            self.app.session.add(new_warehouse)
-            self.app.session.commit()
-        else:
-            raise HoneyError(
-                'provide a warehouse owner with the -wh or --owner_identifier flag')
-
-
-    #@click.option("--warehouse",
-    #              prompt="Warehouse where location should be created",
-    #              default="Garage", help="Select warehouse.")
-    #@click.option("--label", prompt="Enter a name for the inventory location label",
-    #              default="Required", help="Create a location label.")
-    def create_location(warehouse, label):
-        """Create a location, where location is a labeled container holding inventory."""
-        if label == 'Required':
-            return print("You must provide a new location label.")
-        wh = session.query(Warehouse).filter_by(name=warehouse).first()
-        if not wh:
-            return print(
-                f"The {warehouse} warehouse doesn't exist. Please create it first.")
+            wh_obj = self.app.session.query(Warehouse).filter(
+                Warehouse.name == wh_identifier).first()
+        if not wh_obj:
+            # check the cache for an active warehouse
+            wh_obj = Warehouse.get_active_warehouse(self.app)
+            if not wh_obj:
+                raise HoneyError(
+                    'please set an active warehouse or use the -wh or --warehouse '
+                    'flag to designate a warehouse')
         record = session.query(InventoryLocation).filter(
             InventoryLocation.label == label,
-            InventoryLocation.warehouse_id == wh.id).first()
+            InventoryLocation.warehouse_id == wh_obj.id).first()
         if record:
-            return print(f"The label {label} already exists in the {warehouse} warehouse.")
-        InventoryLocation.create(label=label, warehouse_id=wh.id)
-        # todo: set the new location to the "active" location (enable an active location)
-        return print(f'Created new location.')
-
+            raise HoneyError(
+                f"The label {label} already exists in the {wh_obj.name} warehouse.")
+        self.app.log.info(f'creating new inventory location: label={label}, '
+                              f'warehouse={wh_obj.name}')
+        new_invloc = InventoryLocation(label=label, warehouse_id=wh_obj.id)
+        self.app.session.add(new_invloc)
+        self.app.session.commit()
+        return self.app.log.info(f'Created new location.')
 
     @ex(
         help='update a warehouse name to new name',

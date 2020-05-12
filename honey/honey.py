@@ -9,7 +9,7 @@ from honey.core.exc import HoneyError
 from honey.controllers.base import Base
 from honey.controllers.entity import EntityController
 from honey.controllers.warehouse import WarehouseController
-from honey.controllers.inventory_location import InventoryLocationController
+from honey.controllers.location import InventoryLocationController
 from honey.ext.redis import HoneyRedisCacheHandler
 
 # match on ${ env variable } in the yaml file

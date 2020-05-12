@@ -3,7 +3,9 @@ from honey.models.inventory import Warehouse
 
 
 class TestWarehouse:
-    """Warehouse tests."""
+    """
+    Warehouse tests.
+    """
 
     def test_warehouse_list(self, HoneyApp, hooks, db, warehouse):
         """

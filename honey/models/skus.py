@@ -31,7 +31,7 @@ class Container(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     parent = relationship('Container', remote_side='Container.id', backref='children')
     # backref: skus
 
-    def __init__(self, name, description, parent_id):
+    def __init__(self, name, description, parent_id, **kwargs):
         self.name = name
         self.description = description
         self.parent_id = parent_id
@@ -68,14 +68,14 @@ class ProductSku(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     # proxies to the InventoryLocation -> [<InventoryLocation ('hg-1', 'Office')>, ]
     location = association_proxy('locations', 'location')
 
-    # this proxies to the SkuLocationAssoc -> [1, ]
+    # this proxies to the LocationSkuAssoc -> [1, ]
     quantity = association_proxy('locations', 'quantity')
 
-    # proxies to the SkuLocationAssoc -> [<SkuLocationAssoc ('C2-W-L', 'hg-1')>, ]
-    locations = relationship("SkuLocationAssoc", back_populates="sku",
+    # proxies to the LocationSkuAssoc -> [<LocationSkuAssoc ('C2-W-L', 'hg-1')>, ]
+    locations = relationship("LocationSkuAssoc", back_populates="sku",
                  lazy="selectin", passive_deletes=True)
 
-    def __init__(self, sku, upc, description, entity_id, container_id):
+    def __init__(self, sku, upc, description, entity_id, container_id, **kwargs):
         self.sku = sku
         self.description = description
         self.upc = upc
@@ -109,10 +109,9 @@ class SkuAttribute(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     value = Column('value', Unicode())
     entity_id = reference_col('entities')
     entity = relationship('Entity', backref='sku_attrs')
+    # backref: skus from ProductSku
 
-    # backref: skus
-
-    def __init__(self, key, value, entity_id):
+    def __init__(self, key, value, entity_id, **kwargs):
         self.key = key
         self.value = value
         self.entity_id = entity_id

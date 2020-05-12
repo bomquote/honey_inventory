@@ -16,7 +16,7 @@ class Entity(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     # backref: skus
     # backref: warehouses
 
-    def __init__(self, name):
+    def __init__(self, name, **kwargs):
         self.name = name
 
     def __repr__(self):

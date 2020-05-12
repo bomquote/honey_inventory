@@ -8,7 +8,9 @@ from cement import fs
 from .factories import Session, engine
 from honey.honey import HoneyTest
 from honey.core.database import ModelBase
-from .factories import WarehouseFactory, EntityFactory
+from .factories import (WarehouseFactory, EntityFactory, InventoryLocationFactory,
+                        LocationSkuAssocFactory, ProductSkuFactory, ContainerFactory,
+                        SkuAttributeFactory)
 
 
 def test_app_extend_sqla(app):
@@ -65,10 +67,10 @@ def db():
 
 @pytest.fixture(scope="function")
 def entity(db):
-    entity = EntityFactory()
-    db.add(entity)
+    ent = EntityFactory()
+    db.add(ent)
     db.commit()
-    yield entity
+    yield ent
 
 
 @pytest.fixture(scope="function")
@@ -77,3 +79,40 @@ def warehouse(db, entity):
     db.add(wh)
     db.commit()
     yield wh
+
+
+@pytest.fixture(scope="function")
+def container(db):
+    cont = ContainerFactory(
+        parent_id=1,
+        skus=None,
+        parent=None,
+    )
+    db.add(cont)
+    db.commit()
+    yield cont
+
+
+@pytest.fixture(scope="function")
+def invlocation(db, warehouse):
+    """
+    One InventoryLocation can have many ProductSkus.
+    """
+
+    location = InventoryLocationFactory(
+        warehouse_id=warehouse.id,
+        skus=None,
+        label='HG-1'
+    )
+    a = LocationSkuAssocFactory(
+        sku_id=None,
+        location_id=None,
+        quantity=0,
+        location=None,
+        sku=None
+    )
+
+    location.skus.append(a)
+    db.add(location)
+    db.commit()
+    yield location

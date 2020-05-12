@@ -2,7 +2,7 @@ from sqlalchemy import (Integer, Column, ForeignKey,
                         Numeric, Unicode, UnicodeText, Table, UniqueConstraint)
 from sqlalchemy.orm import relationship, backref
 from honey.core.database import (ModelBase, CRUDMixin, SurrogatePK, AuditMixin,
-                                 reference_col)
+                                 reference_col, session)
 
 
 class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -20,12 +20,30 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
     # backref: locations
 
-    def __init__(self, name, entity_id):
+    def __init__(self, name, entity_id, **kwargs):
         self.name = name
         self.entity_id = entity_id
 
     def __repr__(self):
         return f'<Warehouse name={self.name}, entity={self.entity_id}>'
+
+    @classmethod
+    def get_active_warehouse(cls, app):
+        """
+        Check if there is an active warehouse in the app.cache
+        param: app: the active app object
+        returns: A class: <Warehouse> object or none
+        """
+        try:
+            if app.__test__:
+                wh_cache_key = app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
+        except AttributeError:
+            wh_cache_key = app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
+        active_warehouse = app.cache.get(wh_cache_key)
+        if active_warehouse:
+            return session.query(cls).filter_by(name=active_warehouse).first()
+        else:
+            return None
 
 
 class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -37,9 +55,9 @@ class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     carton box in a warehouse and call that label the "inventory location". Then,
     inventory locations are identified by the label. We associate the inventory
     location labels with SKUs in the Association object relation table,
-    `SkuLocationAssoc`. I'm sure this can be made more complex for some use cases
+    `LocationSkuAssoc`. I'm sure this can be made more complex for some use cases
     but it's already flexible and will cover the need for many use cases.
-    Add extra data in the SkuLocationAssoc class (must migrate if changed).
+    Add extra data in the LocationSkuAssoc class (must migrate if changed).
 
     NOTE for changes: this model is imported in alembic/env.py for migrations.
     """
@@ -54,11 +72,11 @@ class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
                              single_parent=True)
 
     skus = relationship(
-        "SkuLocationAssoc", back_populates="location",
+        "LocationSkuAssoc", back_populates="location",
         primaryjoin="sku_locations.c.location_id == InventoryLocation.id",
         lazy="selectin", cascade="all, delete-orphan", passive_deletes=True)
 
-    def __init__(self, label, warehouse_id):
+    def __init__(self, label, warehouse_id, **kwargs):
         self.label = label
         self.warehouse_id = warehouse_id
 
@@ -66,49 +84,52 @@ class InventoryLocation(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
         return f'<InventoryLocation {self.label, self.warehouse.name}>'
 
 
-class SkuLocationAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
+class LocationSkuAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     """
-    An association object for Skus and Locations. The left side of the relationship
-    maps a Sku as a one-to-many to InventoryLocations. This allows one SKU to have many
-    InventoryLocations, offering significant flexibility when combined with the
-    ease of creating transient locations. The association allows to add some extra data
-    like sku quantity in the location, and can also capture items like cost
-    and sales price here as well. Then, the association class maps a
-    many-to-one to the InventoryLocation, so we can have mixed Skus in a single
+    An association object for Locations and Skus. The left side of the relationship
+    maps a InventoryLocation as a one-to-many to LocationSkuAssoc. Then,
+    LocationSkuAssoc maps a one-to-many to ProductSku.
+    This allows one Location to have many ProductSkus, offering significant flexibility
+    when combined with the ease of creating transient locations. The association allows
+    to add some extra data like sku quantity in the location, and can also capture
+    items like cost and sales price here as well. Then, the association class maps a
+    many-to-one to the ProductSku, so we can have mixed Skus in a single
     InventoryLocation. Finally, we can use association_proxy to work with the
     data in this table, as done in the models/skus.py file in the ProductSku class.
     """
+    # ideally this table should be named location_skus, I got it backwards here
     __tablename__ = 'sku_locations'
-    # parent is ProductSku
-    sku_id = Column('sku_id', Integer,
-                    ForeignKey("product_skus.id",
-                               onupdate="CASCADE",
-                               ondelete="CASCADE"),
-                    primary_key=True)
-    # child is InventoryLocation
+    # Parent is InventoryLocation
     location_id = Column('location_id', Integer,
                          ForeignKey("inventory_locations.id",
                                     onupdate="CASCADE",
                                     ondelete="CASCADE"),
                          primary_key=True)
 
+    # Child is ProductSku
+    sku_id = Column('sku_id', Integer,
+                    ForeignKey("product_skus.id",
+                               onupdate="CASCADE",
+                               ondelete="CASCADE"),
+                    primary_key=True)
+
     quantity = Column('quantity', Integer, nullable=False)
 
-    # child
+    # parent
     location = relationship("InventoryLocation", back_populates="skus",
                             foreign_keys=[location_id],
                             lazy="joined", cascade="all, delete")
 
-    # parent
+    # child
     sku = relationship("ProductSku", back_populates='locations',
                        lazy="joined",
                        foreign_keys=[sku_id],
                        cascade="all, delete")
 
-    def __init__(self, sku_id, location_id, quantity):
+    def __init__(self, sku_id, location_id, quantity, **kwargs):
         self.sku_id = sku_id
         self.location_id = location_id
         self.quantity = quantity
 
     def __repr__(self):
-        return f'<SkuLocationAssoc {self.sku.sku, self.location.label}>'
+        return f'<LocationSkuAssoc {self.sku.sku, self.location.label}>'

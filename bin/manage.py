@@ -1,7 +1,7 @@
 import click
 import os
 from honey.models.skus import ProductSku
-from honey.models import (Warehouse, InventoryLocation, SkuLocationAssoc, Entity,
+from honey.models import (Warehouse, InventoryLocation, LocationSkuAssoc, Entity,
                         Container, ProductSku, SkuAttribute)
 
 from honey.core.database import session
