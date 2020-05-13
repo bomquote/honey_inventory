@@ -5,6 +5,7 @@ PyTest Fixtures.
 import pytest
 import pathlib
 from cement import fs
+from sqlalchemy.orm.session import close_all_sessions
 from .factories import Session, engine
 from honey.honey import HoneyTest
 from honey.core.database import ModelBase
@@ -34,6 +35,11 @@ def hooks():
 
 @pytest.fixture(scope="function")
 def template_path():
+    """
+    Path for templates which is currently set to following:
+    -> pathlib.Path.cwd().parent / 'honey' / 'templates'
+    :return:
+    """
     yield pathlib.Path.cwd().parent / 'honey' / 'templates'
 
 
@@ -59,14 +65,23 @@ def tmp(request):
 
 @pytest.fixture(scope="function")
 def db():
+    """
+    A Database for the tests
+    :return: An SQLA Session()
+    """
     ModelBase.metadata.create_all(engine)
     yield Session()
-    Session.close_all()
+    close_all_sessions()
     ModelBase.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope="function")
 def entity(db):
+    """
+    An Entity for the tests
+    :param db:
+    :return:
+    """
     ent = EntityFactory()
     db.add(ent)
     db.commit()
@@ -75,6 +90,12 @@ def entity(db):
 
 @pytest.fixture(scope="function")
 def warehouse(db, entity):
+    """
+    A Warehouse for the tests
+    :param db:
+    :param entity:
+    :return:
+    """
     wh = WarehouseFactory(entity_id=entity.id)
     db.add(wh)
     db.commit()
@@ -83,6 +104,11 @@ def warehouse(db, entity):
 
 @pytest.fixture(scope="function")
 def container(db):
+    """
+    A Container for the tests.
+    :param db:
+    :return:
+    """
     cont = ContainerFactory(
         parent_id=1,
         skus=None,
@@ -94,7 +120,25 @@ def container(db):
 
 
 @pytest.fixture(scope="function")
-def invlocation(db, warehouse):
+def sku(db, entity, container):
+    """
+    A ProductSku for the tests
+    :param db:
+    :return:
+    """
+    sku = ProductSkuFactory(
+        entity_id=entity.id,
+        container_id=container.id,
+        sku_attrs=None,
+        locations=None
+    )
+    db.add(sku)
+    db.commit()
+    yield sku
+
+
+@pytest.fixture(scope="function")
+def invlocation(db, warehouse, sku):
     """
     One InventoryLocation can have many ProductSkus.
     """
@@ -105,9 +149,9 @@ def invlocation(db, warehouse):
         label='HG-1'
     )
     a = LocationSkuAssocFactory(
-        sku_id=None,
+        sku_id=sku.id,
         location_id=None,
-        quantity=0,
+        quantity=1,
         location=None,
         sku=None
     )

@@ -4,7 +4,7 @@ class TestInventoryLocation:
     """
      Inventory location tests.
      """
-    def test_invloc_list(self, HoneyApp, hooks, db):
+    def test_invloc_list(self, HoneyApp, hooks, db, invlocation):
         """
         Test `honey_warehouse_list.  This is returned as a tabulate table.
         :return:

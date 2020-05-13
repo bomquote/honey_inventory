@@ -20,7 +20,7 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
     # backref: locations
 
-    def __init__(self, name, entity_id, **kwargs):
+    def __init__(self, name, entity_id):
         self.name = name
         self.entity_id = entity_id
 

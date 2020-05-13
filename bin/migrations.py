@@ -4,10 +4,11 @@ This module is the entry point for alembic migrations
 
 import click
 import os
+from pathlib import Path
 from alembic import config as alembic_config
-import pathlib
+from honey.core.database import metadata, engine
 
-repo = pathlib.Path.home() / 'repos' / 'honey_inventory'
+repo = Path.home() / 'repos' / 'honey_inventory'
 
 @click.group()
 def db():
@@ -139,6 +140,19 @@ def history(verbose, history_range):
 @db.command()
 def dropdb():
     click.echo('Dropped the database')
+
+
+@db.command()
+@click.option("--identifier", prompt="Revision identifier", default='head',
+              help="The revision identifier to target.")
+def createdb(identifier):
+    """
+    See https://alembic.sqlalchemy.org/en/latest/cookbook.html#building-an-up-to-date-database-from-scratch
+    """
+    os.chdir(str(repo))
+    metadata.create_all(engine)
+    #alembic_config = Config(Path.home() / 'repos' / 'honey_inventory' / 'alembic.ini')
+    alembic_config.main(argv=['stamp', f'{identifier}'])
 
 
 if __name__ == "__main__":

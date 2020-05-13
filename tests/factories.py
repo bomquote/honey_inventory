@@ -62,7 +62,7 @@ class WarehouseFactory(BaseFactory):
 
     name = 'testGarage'
     entity_id = SubFactory('tests.factories.EntityFactory')
-    entity = SubFactory('tests.factories.EntityFactory')
+    # entity = SubFactory('tests.factories.EntityFactory')
 
 
 class LocationSkuAssocFactory(BaseFactory):
@@ -90,7 +90,7 @@ class InventoryLocationFactory(BaseFactory):
 
     label = Sequence(lambda n: 'HG-{0}'.format(n))
     warehouse_id = SubFactory('tests.factories.WarehouseFactory')
-    warehouse = SubFactory('tests.factories.WarehouseFactory')
+    # warehouse = SubFactory('tests.factories.WarehouseFactory')
     skus = List([SubFactory('tests.factories.LocationSkuAssocFactory')])
 
 
@@ -122,9 +122,9 @@ class ProductSkuFactory(BaseFactory):
     upc = Sequence(lambda n: 'upccode{0}'.format(n))
     description = Sequence(lambda n: 'A grapple A{0}, white, iphone'.format(n))
     entity_id = SubFactory('tests.factories.EntityFactory')
-    entity = SubFactory('tests.factories.EntityFactory')
+    # entity = SubFactory('tests.factories.EntityFactory')
     container_id = SubFactory('tests.factories.ContainerFactory')
-    container = SubFactory('tests.factories.ContainerFactory')
+    #container = SubFactory('tests.factories.ContainerFactory')
     sku_attrs = List([SubFactory('tests.factories.SkuAttributeFactory')])
     # location = SubFactory('tests.factories.InventoryLocationFactory')
     # quantity = SubFactory('tests.factories.LocationSkuAssocFactory')

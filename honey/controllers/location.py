@@ -37,7 +37,7 @@ class InventoryLocationController(Controller):
         for record in inventory_locations:
             count += 1
             data.append([count, record.id, record.label, record.warehouse.name,
-                         record.warehouse.owner.name])
+                         record.warehouse.entity.name])
         # it appears we need this try block for easiest testing of tabulate data
         # this is mainly because the output_handler = 'jinja2' in the main Honey app
         # while, we want to use tabulate as the output handler in many cases
