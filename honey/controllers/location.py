@@ -81,12 +81,15 @@ class InventoryLocationController(Controller):
             wh_obj = self.app.session.query(Warehouse).filter(
                 Warehouse.name == wh_identifier).first()
         if not wh_obj:
+            message = f'The warehouse identifier does not exist. ' \
+                      f'Using the active warehouse from cache.'
             # check the cache for an active warehouse
             wh_obj = Warehouse.get_active_warehouse(self.app)
             if not wh_obj:
                 raise HoneyError(
-                    'please set an active warehouse or use the -wh or --warehouse '
-                    'flag to designate a warehouse')
+                    'The warehouse does not exist. Please set an active '
+                    'warehouse or use the flags to designate an existing warehouse')
+            self.app.log.info(message)
         record = session.query(InventoryLocation).filter(
             InventoryLocation.label == label,
             InventoryLocation.warehouse_id == wh_obj.id).first()
@@ -101,15 +104,20 @@ class InventoryLocationController(Controller):
         return self.app.log.info(f'Created new location.')
 
     @ex(
-        help='update a warehouse name to new name',
+        help='update an inventory location record label',
         arguments=[
             (['identifier'],
-             {'help': 'warehouse database name or id',
+             {'help': 'inventory location identifier, record id or label + warehouse',
               'action': 'store'}),
-            (['-n', '--name'],
-             {'help': 'updated warehouse name',
+            (['-nl', '--new_label'],
+             {'help': 'updated inventory location label',
               'action': 'store',
-              'dest': 'new_name'})  # I like to use `new_name` to highlight the change
+              'dest': 'new_label'}),
+            (['-wh', '--warehouse'],
+             {'help': 'warehouse identifier, name or id',
+              'action': 'store',
+              'dest': 'warehouse'}),
+
         ],
     )
     def update(self):
@@ -117,18 +125,26 @@ class InventoryLocationController(Controller):
         Update the warehouse name:
         identifier: name or id
 
-        usage: honey warehouse update <identifier> --name <newname>
+        usage: honey invloc update <label identifier> --new_label <new_label>
+        --warehouse <warehouse identifier>
 
         """
-        identifier = self.app.pargs.identifier
-        if identifier.isnumeric():
-            wh_id = int(identifier)
-            wh_obj = self.app.session.query(Warehouse).filter(
-                Warehouse.id == wh_id).first()
+        label_identifier = self.app.pargs.identifier
+        new_label = self.app.pargs.new_label
+        wh_identifier = self.app.pargs.warehouse
+        if label_identifier.isnumeric():
+            loc_id = int(label_identifier)
+            loc_obj = self.app.session.query(InventoryLocation).filter(
+                InventoryLocation.id ==loc_id).first()
         else:
-            wh_obj = self.app.session.query(
-                Warehouse).filter_by(name=identifier).first()
-        if wh_obj:
+            loc_obj = self.app.session.query(
+                InventoryLocation).filter_by(label=label_identifier).all()
+            # if there is more than one then we must require a warehouse ID
+            if len(loc_obj) > 1:
+
+
+                raise HoneyError('')
+        if loc_obj:
             new_name = self.app.pargs.new_name
             if not new_name:
                 raise HoneyError(f"Warehouse name can't be null")

@@ -138,7 +138,7 @@ def sku(db, entity, container):
 
 
 @pytest.fixture(scope="function")
-def invlocation(db, warehouse, sku):
+def inventory_location(db, warehouse, sku):
     """
     One InventoryLocation can have many ProductSkus.
     """
