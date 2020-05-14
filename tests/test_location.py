@@ -20,7 +20,7 @@ class TestInventoryLocation:
         Test `honey warehouse create`
         :return:
         """
-        argv = ['invloc', 'create', 'HG-2', '-wh', 'testGarage']
+        argv = ['invloc', 'create', 'HG-2', '-w', 'testGarage']
         with HoneyApp(argv=argv, hooks=hooks) as app:
             initial_count = app.session.query(InventoryLocation).count()
             app.run()

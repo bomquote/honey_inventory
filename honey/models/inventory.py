@@ -34,6 +34,7 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
         param: app: the active app object
         returns: A class: <Warehouse> object or none
         """
+        wh_cache_key = None
         try:
             if app.__test__:
                 wh_cache_key = app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')

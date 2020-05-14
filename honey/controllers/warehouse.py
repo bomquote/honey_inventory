@@ -30,7 +30,7 @@ class WarehouseController(Controller):
         """
         warehouses = self.app.session.query(Warehouse).all()
         # for tabulate
-        headers = ['#', 'id', 'name', 'warehouse owner']
+        headers = ['#', 'id', 'name', 'entity']
         data = []
         count = 0
         for record in warehouses:
@@ -57,8 +57,8 @@ class WarehouseController(Controller):
             (['name'],
              {'help': 'honey warehouse create <name>',
               'action': 'store'}),
-            (['-e', '--entity_identifier'],
-             {'help': 'entity owner identifier (an entity_name or entity_id)',
+            (['-e', '--entity'],
+             {'help': 'entity identifier (an entity name or entity id)',
               'action': 'store',
               'dest': 'entity_id'})
         ],
@@ -66,6 +66,8 @@ class WarehouseController(Controller):
     def create(self):
         name = self.app.pargs.name
         identifier = self.app.pargs.entity_id
+        if any((name is None, identifier is None)):
+            raise HoneyError("You must provide a warehouse name and entity identifier")
         if identifier and identifier.isnumeric():
             owner_obj = self.app.session.query(Entity).filter(
                 Entity.id == identifier).first()
@@ -89,6 +91,10 @@ class WarehouseController(Controller):
             (['identifier'],
              {'help': 'warehouse database name or id',
               'action': 'store'}),
+            (['-e', '--entity'],
+             {'help': 'entity identifier (an entity name or entity id)',
+              'action': 'store',
+              'dest': 'entity_id'}),
             (['-n', '--name'],
              {'help': 'updated warehouse name',
               'action': 'store',
@@ -99,30 +105,61 @@ class WarehouseController(Controller):
         """
         Update the warehouse name:
         identifier: name or id
-
-        usage: honey warehouse update <identifier> --name <newname>
+        usage: honey warehouse update <identifier> -e <entity identifier> -n <new name>
 
         """
-        identifier = self.app.pargs.identifier
-        if identifier.isnumeric():
-            wh_id = int(identifier)
+        wh_identifier = self.app.pargs.identifier
+        ent_identifier = self.app.pargs.entity_id
+        new_name = self.app.pargs.new_name
+        if wh_identifier is None:
+            raise HoneyError("Please provide a warehouse identifier")
+        if new_name is None:
+            raise HoneyError("Provide a new warehouse name with the -n or --name flag")
+        #if any((wh_identifier is None, ent_identifier is None)):
+        #    raise HoneyError(
+        #        "You must provide a warehouse identifier, entity identifier, "
+        #        "and an updated warehouse name")
+        if wh_identifier.isnumeric():
+            wh_id = int(wh_identifier)
             wh_obj = self.app.session.query(Warehouse).filter(
                 Warehouse.id == wh_id).first()
         else:
+            # check, if more than one wh_obj with the same name, must include entity
             wh_obj = self.app.session.query(
-                Warehouse).filter_by(name=identifier).first()
-        if wh_obj:
-            new_name = self.app.pargs.new_name
-            if not new_name:
-                raise HoneyError(f"Warehouse name can't be null")
+                Warehouse).filter_by(name=wh_identifier).all()
+            ent_obj = None
+            if all((wh_obj, len(wh_obj) > 1)):
+                # find the entity if it exists
+                if ent_identifier and ent_identifier.isnumeric():
+                    ent_obj = self.app.session.query(Entity).filter_by(
+                        id=ent_identifier).first()
+                elif ent_identifier:
+                    ent_obj = self.app.session.query(Entity).filter_by(
+                        name=ent_identifier).first()
+                if not ent_obj:
+                    raise HoneyError(
+                        'No Entity exists with the provided identifier')
+                wh_obj = self.app.session.query(Warehouse).filter(
+                    Warehouse.name == wh_identifier,
+                    Warehouse.entity_id == ent_obj.id
+                ).first()
+                # do the update here to avoid if/else hell
+                # update by assignment
+                self.app.log.info(
+                    f"updated warehouse name from '{wh_obj.name}' to '{new_name}'")
+                wh_obj.name = new_name
+                return self.app.session.commit()
+            # because you queried Warehouse with `all()` the wh_obj is probably a list
+            elif all((type(wh_obj) == list, len(wh_obj) == 1)):
+                wh_obj = wh_obj[0]
+        if all((wh_obj, wh_identifier.isnumeric())):
             self.app.log.info(
-                f"updating warehouse name from '{wh_obj.name}' to '{new_name}'")
-            # update by assignment
+                f"updated warehouse name from '{wh_obj.name}' to '{new_name}'")
             wh_obj.name = new_name
-            self.app.session.commit()
+            return self.app.session.commit()
         else:
-            self.app.log.info(
-                f"No warehouse with the identifier {identifier} exists.")
+            return self.app.log.info(
+                f"No warehouse with the identifier {wh_identifier} exists.")
 
     @ex(
         help='delete a warehouse',

@@ -13,6 +13,7 @@ class InventoryLocationController(Controller):
         stacked_type = 'nested'
         stacked_on = 'base'
 
+    # todo: optionally add a warehouse_identifier to filter locations by warehouse
     @ex(help='list invloc')
     def list(self):
         """
@@ -59,18 +60,23 @@ class InventoryLocationController(Controller):
             (['label'],
              {'help': 'honey invloc create <name> -wh <warehouse>',
               'action': 'store'}),
-            (['-wh', '--warehouse'],
+            (['-w', '--warehouse'],
              {'help': 'warehouse identifier (a name or id)',
               'action': 'store',
               'dest': 'wh_id'}),
+            (['-e', '--entity'],
+             {'help': 'warehouse owner entity (a name or id)',
+              'action': 'store',
+              'dest': 'entity_id'}),
         ],
     )
     def create(self):
         """
         Create a location, where location is a labeled container holding inventory
-        at a named Warehouse.
+        at a named unique Warehouse/Entity combination
         """
         label = self.app.pargs.label
+        ent_identifier = self.app.pargs.entity_id
         if not label:
             raise HoneyError('you must provide an inventory location label')
         wh_identifier = self.app.pargs.wh_id
@@ -79,7 +85,27 @@ class InventoryLocationController(Controller):
                 Warehouse.id == wh_identifier).first()
         else:
             wh_obj = self.app.session.query(Warehouse).filter(
-                Warehouse.name == wh_identifier).first()
+                Warehouse.name == wh_identifier).all()
+            # check if more than one wh_obj with the same name, must include entity
+            ent_obj = None
+            if all((wh_obj, len(wh_obj) > 1)):
+                # find the entity if it exists
+                if ent_identifier and ent_identifier.isnumeric():
+                    ent_obj = self.app.session.query(Entity).filter_by(
+                        id=ent_identifier).first()
+                elif ent_identifier:
+                    ent_obj = self.app.session.query(Entity).filter_by(
+                        name=ent_identifier).first()
+                if not ent_obj:
+                    raise HoneyError(
+                        'No Entity exists with the provided identifier')
+                wh_obj = self.app.session.query(Warehouse).filter(
+                    Warehouse.name == wh_identifier,
+                    Warehouse.entity_id == ent_obj.id
+                ).first()
+            # because you queried Warehouse with `all()` the wh_obj is probably a list
+            elif all((type(wh_obj) == list, len(wh_obj) == 1)):
+                wh_obj = wh_obj[0]
         if not wh_obj:
             message = f'The warehouse identifier does not exist. ' \
                       f'Using the active warehouse from cache.'
@@ -109,11 +135,11 @@ class InventoryLocationController(Controller):
             (['identifier'],
              {'help': 'inventory location identifier, record id or label + warehouse',
               'action': 'store'}),
-            (['-nl', '--new_label'],
+            (['-n', '--new_label'],
              {'help': 'updated inventory location label',
               'action': 'store',
               'dest': 'new_label'}),
-            (['-wh', '--warehouse'],
+            (['-w', '--warehouse'],
              {'help': 'warehouse identifier, name or id',
               'action': 'store',
               'dest': 'warehouse'}),
@@ -131,31 +157,65 @@ class InventoryLocationController(Controller):
         """
         label_identifier = self.app.pargs.identifier
         new_label = self.app.pargs.new_label
+        if any((label_identifier is None, new_label is None)):
+            raise HoneyError(f"You must provide a label identifier and new label")
+        # warehouse identifier may or may not be needed so we'll deal with it later
         wh_identifier = self.app.pargs.warehouse
         if label_identifier.isnumeric():
+            # then it's a db record id and we just try to find it
             loc_id = int(label_identifier)
             loc_obj = self.app.session.query(InventoryLocation).filter(
-                InventoryLocation.id ==loc_id).first()
+                InventoryLocation.id==loc_id).first()
         else:
+            # assume the label_identifier must be a name
             loc_obj = self.app.session.query(
                 InventoryLocation).filter_by(label=label_identifier).all()
-            # if there is more than one then we must require a warehouse ID
-            if len(loc_obj) > 1:
+        if not loc_obj:
+            raise HoneyError('The location label is not found, '
+                             'please provide a valid location label identifier.')
+        # if there is more than one location record with the same label,
+        #   then we must require a warehouse ID to find the unique targeted label
+        # first check for a provided warehouse name. if none is found,
+        # check the cache for an active warehouse
+        if len(loc_obj) > 1:
+            wh_obj = None
+            if wh_identifier:
+                if wh_identifier.isnumeric():
+                    wh_id = int(wh_identifier)
+                    wh_obj = self.app.session.query(Warehouse).filter(
+                        Warehouse.id == wh_id).first()
+                else:
+                    wh_obj = self.app.session.query(
+                        Warehouse).filter_by(name=wh_identifier).first()
+                if not wh_obj:
+                    raise HoneyError('No warehouse exists with that identifier')
 
-
-                raise HoneyError('')
-        if loc_obj:
-            new_name = self.app.pargs.new_name
-            if not new_name:
-                raise HoneyError(f"Warehouse name can't be null")
-            self.app.log.info(
-                f"updating warehouse name from '{wh_obj.name}' to '{new_name}'")
-            # update by assignment
-            wh_obj.name = new_name
-            self.app.session.commit()
-        else:
-            self.app.log.info(
-                f"No warehouse with the identifier {identifier} exists.")
+            # only go to this next block if the wh_identifier does not exist
+            elif not wh_identifier:
+                wh_obj = Warehouse.get_active_warehouse(self.app)
+                # we assume label_identifier is a label name because if it is a
+                # database record ID then we would only have one record result.
+                # we only get to this block if there is more than one record result.
+                if wh_obj:
+                    loc_obj = self.app.session.query(
+                        InventoryLocation).filter_by(
+                        label=label_identifier, warehouse_id=wh_obj.id).all()
+                    if not loc_obj:
+                        raise HoneyError('You must provide both a location label '
+                                         'and warehouse identifier.')
+            if not wh_obj:
+                raise HoneyError(
+                    'The warehouse does not exist. Please set an active '
+                    'warehouse or use the flags to designate an existing warehouse')
+            else:
+                raise HoneyError('You must provide a warehouse identifier.')
+        # update by assignment
+        print(f'this is loc_obj -> {loc_obj}')
+        print(f'this is new_label -> "{new_label}"')
+        loc_obj[0].label = new_label
+        self.app.session.commit()
+        return self.app.log.info(
+            f"updated location label name from '{loc_obj[0].label}' to '{new_label}'")
 
     @ex(
         help='delete a warehouse',
