@@ -3,6 +3,8 @@ from sqlalchemy import (Integer, Column, ForeignKey,
 from sqlalchemy.orm import relationship, backref
 from honey.core.database import (ModelBase, CRUDMixin, SurrogatePK, AuditMixin,
                                  reference_col, session)
+from honey.models.entities import Entity
+from honey.core.exc import HoneyError
 
 
 class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
@@ -26,6 +28,61 @@ class Warehouse(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
 
     def __repr__(self):
         return f'<Warehouse name={self.name}, entity={self.entity_id}>'
+
+    @classmethod
+    def get_obj(cls, app, identifier):
+        """
+        Get the Warehouse object per the Warehouse identifier or raise HoneyError
+        :param: app: the current app
+        :param: identifier: either a database record id or a Warehouse name
+        :return: Warehouse object or raise HoneyError
+        """
+        wh_obj = None
+        if identifier is not None and identifier.isnumeric():
+            wh_obj = app.session.query(cls).filter_by(
+                id=identifier).first()
+        elif identifier is not None:
+            wh_obj = app.session.query(cls).filter_by(
+                name=identifier).first()
+        if not wh_obj:
+            raise HoneyError(
+                'No warehouse exists with the provided identifier')
+        return wh_obj
+
+    @classmethod
+    def get_obj_with_entity(cls, app, wh_identifier, ent_identifier, return_none=False):
+        """
+        Get the Warehouse object per the Warehouse identifier or raise HoneyError
+        :param: app: the current app
+        :param: wh_identifier: either a warehouse table record id or a Warehouse.name
+        :param: ent_identifier: either a entity table record id or Entity.name
+        :return: Warehouse object or raise HoneyError if return_none == False.
+        Warehouse object or None if return_none == True.
+        """
+        wh_obj = None
+        wh_identifier = str(wh_identifier)
+        ent_identifier = str(ent_identifier)
+        if wh_identifier is None:
+            raise HoneyError("You must provide a warehouse identifier")
+        if wh_identifier is not None and wh_identifier.isnumeric():
+            wh_obj = app.session.query(cls).filter_by(
+                id=wh_identifier).first()
+            return wh_obj
+        if wh_identifier is not None:
+            wh_obj = app.session.query(cls).filter_by(
+                name=wh_identifier).all()
+            if len(wh_obj) == 1:
+                return wh_obj[0]
+            if ent_identifier is None:
+                raise HoneyError(f"You must provide an entity identifier to find the "
+                                 f"correct warehouse with name={wh_identifier}")
+            ent_obj = Entity.get_obj(app, ent_identifier)
+            wh_obj = app.session.query(cls).filter_by(
+                    name=wh_identifier, entity_id=ent_obj.id).first()
+        if not wh_obj and not return_none:
+            raise HoneyError(
+                'No warehouse exists with the provided identifier')
+        return wh_obj
 
     @classmethod
     def get_active_warehouse(cls, app):
