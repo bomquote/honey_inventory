@@ -1,4 +1,6 @@
 from honey.models.inventory import InventoryLocation
+from honey.core.exc import HoneyError
+from pytest import raises
 
 class TestInventoryLocation:
     """
@@ -27,4 +29,24 @@ class TestInventoryLocation:
             final_count = app.session.query(InventoryLocation).count()
             assert initial_count + 1 == final_count
             assert 'HG-2' in \
+                   [x.label for x in app.session.query(InventoryLocation).all()]
+
+    def test_invloc_create_wh_not_exist_raises(self, HoneyApp, hooks, db, inventory_location):
+        """
+        Test `honey invloc create` raises if a warehouse doesn't exist
+        :return:
+        """
+        argv = ['invloc', 'create', 'HG-2', '-w', 'testGarage2']
+        with HoneyApp(argv=argv, hooks=hooks) as app:
+            with raises(HoneyError):
+                app.run()
+
+    def test_invloc_update(self, HoneyApp, hooks, db, inventory_location):
+        """
+        Test `honey invloc update hg-1 -n hg-1a`
+        """
+        argv = ['invloc', 'update', 'HG-1', '-n', 'HG-1a']
+        with HoneyApp(argv=argv, hooks=hooks) as app:
+            app.run()
+            assert 'HG-1a' in \
                    [x.label for x in app.session.query(InventoryLocation).all()]

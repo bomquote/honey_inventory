@@ -176,13 +176,13 @@ class LocationSkuAssoc(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
     # parent
     location = relationship("InventoryLocation", back_populates="skus",
                             foreign_keys=[location_id],
-                            lazy="joined", cascade="all, delete")
+                            lazy="joined", cascade="save-update, merge")
 
     # child
     sku = relationship("ProductSku", back_populates='locations',
                        lazy="joined",
                        foreign_keys=[sku_id],
-                       cascade="all, delete")
+                       cascade="save-update, merge")
 
     def __init__(self, sku_id, location_id, quantity, **kwargs):
         self.sku_id = sku_id

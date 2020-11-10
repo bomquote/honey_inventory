@@ -67,3 +67,32 @@ class EntityController(Controller):
         new_entity = Entity(name=name)
         self.app.session.add(new_entity)
         self.app.session.commit()
+
+    @ex(
+        help='delete an entity',
+        arguments=[
+            (['identifier'],
+             {'help': 'entity database name or id',
+              'action': 'store'}),
+        ],
+    )
+    def delete(self):
+        """
+        todo: if you delete an entity for god sakes you must check if there
+            is inventory in the warehouse that needs transferred!
+        :return:
+        """
+        identifier = self.app.pargs.identifier
+        if identifier.isnumeric():
+            id = int(identifier)
+            ent_obj = self.app.session.query(Entity).filter_by(id=id).first()
+        else:
+            ent_obj = self.app.session.query(Entity).filter_by(
+                name=identifier).first()
+        if ent_obj:
+            self.app.log.info(
+                f"deleting the entity '{ent_obj.name}' with id='{ent_obj.id}'")
+            return self.app.session.delete(ent_obj)
+        else:
+            self.app.log.info(
+                f"An entity with identifier='{identifier}' does not exist.")

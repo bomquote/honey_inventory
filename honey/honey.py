@@ -10,6 +10,7 @@ from honey.controllers.base import Base
 from honey.controllers.entity import EntityController
 from honey.controllers.warehouse import WarehouseController
 from honey.controllers.location import InventoryLocationController
+from honey.controllers.inventory import InventoryActionController
 from honey.ext.redis import HoneyRedisCacheHandler
 
 # match on ${ env variable } in the yaml file
@@ -78,7 +79,8 @@ class Honey(App):
             Base,
             EntityController,
             WarehouseController,
-            InventoryLocationController
+            InventoryLocationController,
+            InventoryActionController
         ]
 
         hooks = [

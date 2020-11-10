@@ -1,6 +1,7 @@
 from cement import Controller, ex
 from honey.core.database import session
-from honey.models.inventory import Warehouse, InventoryLocation
+from honey.models.inventory import Warehouse, InventoryLocation, LocationSkuAssoc
+from honey.models.skus import ProductSku
 from honey.models.entities import Entity
 from honey.core.exc import HoneyError
 from tabulate import tabulate
@@ -14,7 +15,7 @@ class InventoryLocationController(Controller):
         stacked_on = 'base'
 
     # todo: optionally add a warehouse_identifier to filter locations by warehouse
-    @ex(help='list invloc')
+    @ex(help='invloc list')
     def list(self):
         """
         Render the inventory_locations table id's and names.
@@ -130,7 +131,7 @@ class InventoryLocationController(Controller):
         return self.app.log.info(f'Created new location.')
 
     @ex(
-        help='update an inventory location record label',
+        help='update an inventory location record label or warehouse',
         arguments=[
             (['identifier'],
              {'help': 'inventory location identifier, record id or label + warehouse',
@@ -139,16 +140,25 @@ class InventoryLocationController(Controller):
              {'help': 'updated inventory location label',
               'action': 'store',
               'dest': 'new_label'}),
+            (['-e', '--entity'],
+             {'help': 'entity identifier (an entity name or entity id)',
+              'action': 'store',
+              'dest': 'ent_identifier'}),
             (['-w', '--warehouse'],
              {'help': 'warehouse identifier, name or id',
               'action': 'store',
               'dest': 'warehouse'}),
-
+            (['-new_wh', '--new_warehouse'],
+             {'help': 'warehouse identifier, name or id',
+              'action': 'store',
+              'dest': 'new_wh'}),
         ],
     )
     def update(self):
         """
-        Update the warehouse name:
+        # todo: this is a mess could be better if broken into several more granular
+            commands, like update_label or transfer_label
+        Update the invloc label or warehouse name:
         identifier: name or id
 
         usage: honey invloc update <label identifier> --new_label <new_label>
@@ -157,17 +167,18 @@ class InventoryLocationController(Controller):
         """
         label_identifier = self.app.pargs.identifier
         new_label = self.app.pargs.new_label
+        new_wh = self.app.pargs.new_wh
+        ent_identifier = self.app.pargs.ent_identifier
         if any((label_identifier is None, new_label is None)):
             raise HoneyError(f"You must provide a label identifier and new label")
-        # warehouse identifier may or may not be needed so we'll deal with it later
-        wh_identifier = self.app.pargs.warehouse
+
         if label_identifier.isnumeric():
             # then it's a db record id and we just try to find it
             loc_id = int(label_identifier)
             loc_obj = self.app.session.query(InventoryLocation).filter(
-                InventoryLocation.id==loc_id).first()
+                InventoryLocation.id == loc_id).first()
         else:
-            # assume the label_identifier must be a name
+            # assume the label_identifier must be text for a label
             loc_obj = self.app.session.query(
                 InventoryLocation).filter_by(label=label_identifier).all()
         if not loc_obj:
@@ -177,6 +188,8 @@ class InventoryLocationController(Controller):
         #   then we must require a warehouse ID to find the unique targeted label
         # first check for a provided warehouse name. if none is found,
         # check the cache for an active warehouse
+        # warehouse identifier may or may not be needed so we'll deal with it later
+        wh_identifier = self.app.pargs.warehouse
         if len(loc_obj) > 1:
             wh_obj = None
             if wh_identifier:
@@ -189,6 +202,7 @@ class InventoryLocationController(Controller):
                         Warehouse).filter_by(name=wh_identifier).first()
                 if not wh_obj:
                     raise HoneyError('No warehouse exists with that identifier')
+                # todo: if two warehouse have the same name then this is bad
 
             # only go to this next block if the wh_identifier does not exist
             elif not wh_identifier:
@@ -209,81 +223,52 @@ class InventoryLocationController(Controller):
                     'warehouse or use the flags to designate an existing warehouse')
             else:
                 raise HoneyError('You must provide a warehouse identifier.')
-        # update by assignment
-        print(f'this is loc_obj -> {loc_obj}')
-        print(f'this is new_label -> "{new_label}"')
-        loc_obj[0].label = new_label
+        # check if the new_wh exists:
+        if new_wh:
+            if not ent_identifier:
+                raise HoneyError('You must provide an entity to change the warehouse')
+            wh_obj = Warehouse.get_obj_with_entity(self.app, wh_identifier, ent_identifier)
+            # check to ensure that the label doesnt exists in the new wh_obj
+
+            loc_obj[0].warehouse_id = wh_obj.id
+            self.app.log.info(
+                f"updated warehouse to '{wh_obj.name}'")
+
+        if new_label:
+            loc_obj[0].label = new_label
+            self.app.log.info(
+                f"updated location label name from '{loc_obj[0].label}' to '{new_label}'")
         self.app.session.commit()
-        return self.app.log.info(
-            f"updated location label name from '{loc_obj[0].label}' to '{new_label}'")
+        return self.app.log.info('Update complete')
 
     @ex(
-        help='delete a warehouse',
+        help='delete an inventory location at the currently active warehouse',
         arguments=[
             (['identifier'],
-             {'help': 'warehouse database name or id',
-              'action': 'store'}),
+             {'help': 'inventory location database name or id',
+              'action': 'store'})
         ],
     )
     def delete(self):
         identifier = self.app.pargs.identifier
+        wh_obj = Warehouse.get_active_warehouse(self.app)
+        if not wh_obj:
+            raise HoneyError("Set an active warehouse before deleting a location label")
         if identifier.isnumeric():
             id = int(identifier)
-            wh_obj = self.app.session.query(Warehouse).filter_by(id=id).first()
+            invloc_obj = self.app.session.query(InventoryLocation).filter_by(id=id).first()
         else:
-            wh_obj = self.app.session.query(Warehouse).filter_by(
-                name=identifier).first()
-        if wh_obj:
+            invloc_obj = self.app.session.query(InventoryLocation).filter_by(
+                label=identifier, warehouse_id=wh_obj.id).first()
+        if invloc_obj:
+            # check to ensure there is no inventory in the location.
+            if invloc_obj.skus:
+                print(f'skus in the location -> {invloc_obj.skus}')
+                raise HoneyError('refusing to delete location because it has skus')
             self.app.log.info(
-                f"deleting the warehouse '{wh_obj.name}' with id='{wh_obj.id}'")
-            return self.app.session.delete(wh_obj)
-        else:
-            self.app.log.info(
-                f"A warehouse with identifier='{identifier}' does not exist.")
-
-    @ex(
-        help='set the active warehouse by name or id',
-        arguments=[
-            (['identifier'],
-             {'help': 'honey warehouse activate <identifier>',
-              'action': 'store'})
-        ],
-    )
-    def activate(self):
-        """
-        Sets the active warehouse in redis cache. This cuts down redundant
-        commands in managing locations. It assumes the user is issuing
-        multiple consecutive commands in working within the same warehouse.
-        """
-        identifier = self.app.pargs.identifier
-        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
-        if self.app.__test__:
-            wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
-        if identifier.isnumeric():
-            id = int(identifier)
-            wh_obj = self.app.session.query(Warehouse).filter_by(id=id).first()
-        else:
-            wh_obj = self.app.session.query(Warehouse).filter_by(
-                name=identifier).first()
-        if wh_obj:
-            self.deactivate()
-            self.app.cache.set(wh_cache_key, wh_obj.name)
-            self.app.log.info(
-                f"Activating warehouse '{wh_obj.name}' with id='{wh_obj.id}'.")
+                f"deleting the inventory location '{invloc_obj.label}' with id='{invloc_obj.id}'")
+            self.app.session.delete(invloc_obj)
+            return self.app.session.commit()
         else:
             self.app.log.info(
-                f"A warehouse with the identifier {identifier} does not exist.")
-
-    @ex(
-        help='clear active warehouse'
-    )
-    def deactivate(self):
-        wh_cache_key = self.app.config.get('honey', 'WAREHOUSE_CACHE_KEY')
-        if self.app.__test__:
-            wh_cache_key = self.app.config.get('honeytest', 'WAREHOUSE_CACHE_KEY')
-        active_warehouse = self.app.cache.get(wh_cache_key)
-        if active_warehouse:
-            self.app.log.info(f"Deactivated warehouse '{active_warehouse}'.")
-            self.app.cache.delete(wh_cache_key)
-        else:
-            self.app.log.info(f"No active warehouse.")
+                f"An inventory location with identifier='{identifier}' does not exist.")

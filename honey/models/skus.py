@@ -65,10 +65,10 @@ class ProductSku(ModelBase, CRUDMixin, SurrogatePK, AuditMixin):
         cascade="all, delete", passive_deletes=True
     )
 
-    # proxies to the InventoryLocation -> [<InventoryLocation ('hg-1', 'Office')>, ]
+    # proxies to the InventoryLocation -> [<InventoryLocation ('hg-1', 'Office')>, ]  FALSE
     location = association_proxy('locations', 'location')
 
-    # this proxies to the LocationSkuAssoc -> [1, ]
+    # this proxies to the LocationSkuAssoc -> [1, ] its probably broken need to check
     quantity = association_proxy('locations', 'quantity')
 
     # proxies to the LocationSkuAssoc -> [<LocationSkuAssoc ('C2-W-L', 'hg-1')>, ]
