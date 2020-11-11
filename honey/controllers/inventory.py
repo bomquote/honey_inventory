@@ -98,12 +98,14 @@ class InventoryActionController(Controller):
         while True:
             ucc = input('Scan a UCC: ')
             ucc = ucc.lower().strip().replace('\t', '').replace('\n', '')
-            if ucc == 'exit':
+            if ucc.lower == 'exit':
                 break
             # lookup the UCC to get the sku
             sku_obj = self.app.session.query(ProductSku).filter(
                 ProductSku.upc == ucc).first()
-
+            if not sku_obj:
+                self.app.log.info(f'command {ucc} not recognized.')
+                break
             loc_assoc_obj = self.app.session.query(LocationSkuAssoc).filter(
                 LocationSkuAssoc.sku_id == sku_obj.id,
                 LocationSkuAssoc.location_id == location_obj.id).first()

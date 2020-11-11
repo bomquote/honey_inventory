@@ -272,3 +272,33 @@ class InventoryLocationController(Controller):
         else:
             self.app.log.info(
                 f"An inventory location with identifier='{identifier}' does not exist.")
+
+    @ex(
+        help='show contents of a label at the currently active warehouse',
+        arguments=[
+            (['identifier'],
+             {'help': 'inventory location label or id',
+              'action': 'store'})
+        ],
+    )
+    def contents(self):
+        identifier = self.app.pargs.identifier
+        wh_obj = Warehouse.get_active_warehouse(self.app)
+        if not wh_obj:
+            raise HoneyError("Set an active warehouse before retrieving contents of a location label")
+        if identifier.isnumeric():
+            id = int(identifier)
+            invloc_obj = self.app.session.query(InventoryLocation).filter_by(id=id).first()
+        else:
+            invloc_obj = self.app.session.query(InventoryLocation).filter_by(
+                label=identifier, warehouse_id=wh_obj.id).first()
+        if invloc_obj:
+            # check to ensure there is no inventory in the location.
+            if invloc_obj.skus:
+                for loc_sku_assoc in invloc_obj.skus:
+                    # todo: give a summary output here instead of line-by-line
+                    self.app.log.info(f'{loc_sku_assoc.sku}, {loc_sku_assoc.quantity}')
+            return self.app.log.info('Content output complete.')
+        else:
+            return self.app.log.info(
+                f"An inventory location with identifier='{identifier}' does not exist.")

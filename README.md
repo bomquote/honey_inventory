@@ -91,7 +91,7 @@ configuration data:
     - `containers` table
       - list the kind of containers are your goods stored in and reference them to each other to describe parent-child relations. 
       ![Image of containers tbl](https://github.com/bomquote/honey_inventory/blob/master/images/container_tbl.png?raw=true)
-    - `sku_owners` table
+    - `entities` table
       - create an entry for each of the ultimate owners of the inventory/products in your database
       ![Image of sku_owners tbl](https://github.com/bomquote/honey_inventory/blob/master/images/sku_owners_tbl.png?raw=true)
     - `sku_attrs` table
